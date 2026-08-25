@@ -1,0 +1,1 @@
+// Uses the price catalog to generate line items, contingencies, totals and quote terms

@@ -1,0 +1,1 @@
+// Defines agent role and hard behavioral boundaries

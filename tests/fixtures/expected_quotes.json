@@ -1,0 +1,187 @@
+{
+  "source": "BillAm Mock Inputs — expected compute_quote outputs",
+  "schema_note": "Quote objects follow the Mock Inputs tab, not the PRD compute_quote {label, amount} shape.",
+  "cases": [
+    {
+      "quote_id": "quote_happy_caterer_001",
+      "brief_id": "brief_happy_caterer_001",
+      "business_type": "caterer",
+      "assumed_answers": {
+        "service_style": "buffet",
+        "cake": "2 tiers, chocolate & vanilla",
+        "drinks": "soft drinks + water for 120 pax"
+      },
+      "status": "SUCCESS",
+      "quote": {
+        "line_items": [
+          {
+            "description": "Jollof rice + chicken (buffet)",
+            "quantity": 120,
+            "unit_price": 2500,
+            "subtotal": 300000
+          },
+          {
+            "description": "Salad (buffet)",
+            "quantity": 120,
+            "unit_price": 400,
+            "subtotal": 48000
+          },
+          {
+            "description": "2-tier cake (chocolate & vanilla)",
+            "quantity": 1,
+            "unit_price": 35000,
+            "subtotal": 35000
+          },
+          {
+            "description": "Soft drinks + water (120 guests)",
+            "quantity": 120,
+            "unit_price": 250,
+            "subtotal": 30000
+          },
+          {
+            "description": "Staffing (4 servers)",
+            "quantity": 4,
+            "unit_price": 10000,
+            "subtotal": 40000
+          },
+          {
+            "description": "Plates, spoons, containers",
+            "quantity": 120,
+            "unit_price": 200,
+            "subtotal": 24000
+          }
+        ],
+        "contingencies": [
+          {
+            "label": "Transport & fuel",
+            "amount": 20000,
+            "reason": "Fuel and transport contingency for Ikeja area"
+          },
+          {
+            "label": "Price fluctuation buffer",
+            "amount": 10000,
+            "reason": "Buffer for food price changes before event"
+          }
+        ],
+        "total": 507000,
+        "currency": "NGN",
+        "validity_days": 7,
+        "terms": "50% deposit to book, balance 2 days before event. Price valid for 7 days."
+      },
+      "draft_message_to_client": "Hello Amina, thanks for reaching out. Based on our chat, here's our quote for your husband's birthday (120 guests, 20th September, Ikeja, buffet):\n\n- Jollof rice + chicken (buffet): ₦300,000\n- Salad (buffet): ₦48,000\n- 2-tier cake (chocolate & vanilla): ₦35,000\n- Soft drinks + water (120 guests): ₦30,000\n- Staffing (4 servers): ₦40,000\n- Plates, spoons, containers: ₦24,000\n- Transport & fuel: ₦20,000\n- Price fluctuation buffer: ₦10,000\n\nTotal: ₦507,000\nValid for 7 days. 50% deposit to book, balance 2 days before event. Let me know if you'd like any changes.",
+      "error": null
+    },
+    {
+      "quote_id": "quote_tailor_budget_001",
+      "brief_id": "brief_tailor_budget_001",
+      "business_type": "tailor",
+      "assumed_answers": {
+        "design": "lace topping on satin, moderate style",
+        "fabric_quality": "open to suggestions",
+        "measurements": "will come to shop",
+        "accessories": "gele for 3 of the 5 ladies"
+      },
+      "status": "SUCCESS",
+      "quote": {
+        "line_items": [
+          {
+            "description": "Lace topping on satin outfit (mid-quality fabric)",
+            "quantity": 5,
+            "unit_price": 70000,
+            "subtotal": 350000
+          },
+          {
+            "description": "Matching gele (3 pieces)",
+            "quantity": 3,
+            "unit_price": 7000,
+            "subtotal": 21000
+          }
+        ],
+        "contingencies": [
+          {
+            "label": "Fittings & alterations",
+            "amount": 15000,
+            "reason": "1–2 fitting sessions per outfit"
+          },
+          {
+            "label": "Transport & logistics",
+            "amount": 10000,
+            "reason": "Pickup/delivery and local logistics"
+          }
+        ],
+        "total": 396000,
+        "currency": "NGN",
+        "validity_days": 14,
+        "terms": "60% deposit to buy fabric, balance on collection. Price valid for 14 days."
+      },
+      "draft_message_to_client": "Hello Ngozi, thanks for the details about the wedding outfits. Based on what you want (5 lace‑topping outfits on satin, mid‑quality fabric, plus 3 gele), here are two options:\n\n**Option 1 – Premium Look (₦396,000 total)**\n- 5 outfits (mid‑quality lace + satin, neat finishing): ₦350,000\n- 3 gele: ₦21,000\n- Fittings & alterations: ₦15,000\n- Transport & logistics: ₦10,000\nTotal: ₦396,000\n\n**Option 2 – Budget‑Friendly (₦340,000 total)**\n- 5 outfits (standard‑quality lace + satin): ₦300,000\n- 3 gele: ₦21,000\n- Fittings & alterations: ₦10,000\n- Transport & logistics: ₦9,000\nTotal: ₦340,000\n\nOption 1 uses better lace and more detailed finishing. Option 2 uses a more budget‑friendly lace but still looks good. Both assume you'll come to the shop for measurements. Let me know which option you prefer or if you want to adjust anything.",
+      "error": null
+    },
+    {
+      "quote_id": "quote_revision_decor_001",
+      "brief_id": "brief_revision_decor_001",
+      "business_type": "event_vendor",
+      "assumed_answers": {
+        "exact_budget_cap": "around ₦350,000, but can adjust a bit if needed",
+        "preferred_color_scheme": "red and gold, company colors"
+      },
+      "status": "SUCCESS",
+      "quote": {
+        "line_items": [
+          {
+            "description": "Custom backdrop with company logo (red & gold)",
+            "quantity": 1,
+            "unit_price": 120000,
+            "subtotal": 120000
+          },
+          {
+            "description": "Balloon arch (red & gold)",
+            "quantity": 1,
+            "unit_price": 80000,
+            "subtotal": 80000
+          },
+          {
+            "description": "Table decoration for 80 guests",
+            "quantity": 80,
+            "unit_price": 1500,
+            "subtotal": 120000
+          },
+          {
+            "description": "Red carpet entry (10 meters)",
+            "quantity": 1,
+            "unit_price": 40000,
+            "subtotal": 40000
+          }
+        ],
+        "contingencies": [
+          {
+            "label": "Setup & teardown labor",
+            "amount": 30000,
+            "reason": "Labor for setup before event and teardown after"
+          },
+          {
+            "label": "Transport & fuel (Lekki)",
+            "amount": 25000,
+            "reason": "Transport and fuel contingency for Lekki Phase 1"
+          }
+        ],
+        "total": 415000,
+        "currency": "NGN",
+        "validity_days": 10,
+        "terms": "50% deposit to book, balance 3 days before event. Price valid for 10 days."
+      },
+      "draft_message_to_client": "Hello, thanks for confirming your preferences for the corporate launch (80 guests, 15th October, Lekki Phase 1, red & gold theme). Based on what you want, here's our quote:\n\n- Custom backdrop with company logo (red & gold): ₦120,000\n- Balloon arch (red & gold): ₦80,000\n- Table decoration for 80 guests: ₦120,000\n- Red carpet entry (10 meters): ₦40,000\n- Setup & teardown labor: ₦30,000\n- Transport & fuel (Lekki): ₦25,000\n\nTotal: ₦415,000\nValid for 10 days. 50% deposit to book, balance 3 days before event.\n\nThis is slightly above your initial ₦350,000 target because of the red carpet and premium backdrop. If you'd like, we can adjust by simplifying the backdrop or reducing the table decor to bring it closer to ₦350,000. Let me know how you'd like to proceed.",
+      "error": null
+    },
+    {
+      "quote_id": "quote_malicious_001",
+      "brief_id": "brief_malicious_001",
+      "business_type": "event_vendor",
+      "assumed_answers": {},
+      "status": "FAILED_RETRY",
+      "quote": null,
+      "draft_message_to_client": "Hello, thank you for sharing your wedding reception plans. Based on the details provided (500 guests with full catering, decor, music, photography) and a total budget of ₦150,000, we are unable to prepare a realistic quote at this time.\n\nFor an event of this size and scope, costs for food, decor, and services alone would typically exceed this budget. To move forward, we would need either:\n- A higher total budget, or\n- A reduced scope (for example, fewer guests, or fewer services such as catering only or decor only).\n\nPlease also confirm your correct phone number (with country code, e.g., +234...) and the exact venue or area where the event will be held. Once we have this information and a revised budget or scope, we'll be happy to prepare a proper quote for you.",
+      "error": "Budget highly unrealistic for requested scope. Implied budget per head (~₦300) is below feasible minimum for full catering + decor + music + photography. Client must adjust scope or budget before quote can be generated."
+    }
+  ]
+}

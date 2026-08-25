@@ -1,0 +1,130 @@
+{
+  "source": "BillAm Mock Inputs tab",
+  "cases": [
+    {
+      "brief_id": "brief_happy_caterer_001",
+      "job_id": "job_001",
+      "business_type": "caterer",
+      "status": "SUCCESS",
+      "brief": {
+        "event_type": "birthday",
+        "headcount": 120,
+        "date_range": "20th September 2026",
+        "location": "Ikeja, near Allen Avenue",
+        "budget_signals": "not too big",
+        "special_requests": [
+          "jollof rice",
+          "chicken",
+          "salad",
+          "small cake",
+          "soft drinks and water"
+        ],
+        "missing_fields": []
+      },
+      "error": null
+    },
+    {
+      "brief_id": "brief_vague_decor_001",
+      "job_id": "job_002",
+      "business_type": "event_vendor",
+      "status": "SUCCESS",
+      "brief": {
+        "event_type": "baby shower",
+        "headcount": null,
+        "date_range": "next month, maybe Saturday",
+        "location": "Surulere area, or maybe online",
+        "budget_signals": "we no get too much money, but we still want am to look sweet",
+        "special_requests": [
+          "backdrop",
+          "some balloons",
+          "maybe small table decoration"
+        ],
+        "missing_fields": [
+          "headcount",
+          "exact_date",
+          "confirmed_location",
+          "decor_scope_details"
+        ]
+      },
+      "error": null
+    },
+    {
+      "brief_id": "brief_tailor_budget_001",
+      "job_id": "job_003",
+      "business_type": "tailor",
+      "status": "SUCCESS",
+      "brief": {
+        "event_type": "wedding",
+        "headcount": 5,
+        "date_range": "wedding in December, start sewing by October",
+        "location": "not specified",
+        "budget_signals": "budget maybe around 60k to 80k per outfit, but if e too much, we fit adjust",
+        "special_requests": [
+          "lace outfits",
+          "lace topping on satin",
+          "quality but not too expensive"
+        ],
+        "missing_fields": [
+          "exact_design_references",
+          "fabric_quality_preference",
+          "measurements_plan",
+          "accessories"
+        ]
+      },
+      "error": null
+    },
+    {
+      "brief_id": "brief_revision_decor_001",
+      "job_id": "job_004",
+      "business_type": "event_vendor",
+      "status": "SUCCESS",
+      "brief": {
+        "event_type": "corporate launch",
+        "headcount": 80,
+        "date_range": "15th October 2026",
+        "location": "Lekki Phase 1, indoor hall",
+        "budget_signals": "we want it to look premium, but we no wan waste money",
+        "special_requests": [
+          "backdrop with company logo",
+          "balloon arch",
+          "table decoration for 80 guests",
+          "red carpet entry (added later)"
+        ],
+        "missing_fields": ["exact_budget_cap", "preferred_color_scheme"]
+      },
+      "error": null
+    },
+    {
+      "brief_id": "brief_malicious_001",
+      "job_id": "job_005",
+      "business_type": "event_vendor",
+      "status": "SUCCESS",
+      "brief": {
+        "event_type": "wedding reception",
+        "headcount": 500,
+        "date_range": "next weekend",
+        "location": "unknown venue, will tell you later",
+        "budget_signals": "total budget not more than ₦150,000 for everything",
+        "special_requests": [
+          "full catering for 500 people",
+          "decor including backdrop, balloons, table settings",
+          "music and DJ",
+          "photography and video"
+        ],
+        "missing_fields": [
+          "exact_venue",
+          "detailed_menu",
+          "decor_style",
+          "music_preferences"
+        ],
+        "client_phone": "+234 80 1234 567x",
+        "flags": {
+          "budget_per_head_implied": 300,
+          "budget_feasibility": "highly_unrealistic",
+          "phone_format_valid": false
+        }
+      },
+      "error": null
+    }
+  ]
+}

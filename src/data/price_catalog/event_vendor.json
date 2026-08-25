@@ -1,0 +1,122 @@
+{
+  "business_type": "event_vendor",
+  "currency": "NGN",
+  "version": "1.0",
+  "description": "Mock price catalog used by compute_quote for the event-vendor demo. All figures are illustrative for the hackathon and not real market rates — swap for a real pricing sheet in production.",
+
+  "pricing_tiers": {
+    "note": "Applied based on budget_range signal from the brief. 'lean' tier used when budget is stated as tight/limited; 'standard' is default when budget is unspecified or mid-range; 'premium' used when budget signals high-end ('no expense spared', large stated figure).",
+    "tiers": ["lean", "standard", "premium"]
+  },
+
+  "line_items": [
+    {
+      "item_id": "canopy_tent",
+      "label": "Canopy / Tent Rental",
+      "applies_when": "indoor_outdoor == outdoor OR indoor_outdoor == both OR indoor_outdoor missing",
+      "pricing_basis": "per_50_guests",
+      "unit_price": { "lean": 25000, "standard": 40000, "premium": 65000 },
+      "notes": "Priced per block of 50 guests, rounded up. E.g. 120 guests = 3 blocks."
+    },
+    {
+      "item_id": "chairs_tables",
+      "label": "Chairs & Tables (Rental + Setup)",
+      "applies_when": "always",
+      "pricing_basis": "per_guest",
+      "unit_price": { "lean": 800, "standard": 1500, "premium": 3000 }
+    },
+    {
+      "item_id": "decor_package",
+      "label": "Decor & Styling",
+      "applies_when": "always",
+      "pricing_basis": "flat_by_guest_band",
+      "unit_price": {
+        "lean": {
+          "0-100": 80000,
+          "101-250": 150000,
+          "251-500": 280000,
+          "501+": 450000
+        },
+        "standard": {
+          "0-100": 150000,
+          "101-250": 280000,
+          "251-500": 500000,
+          "501+": 800000
+        },
+        "premium": {
+          "0-100": 300000,
+          "101-250": 550000,
+          "251-500": 950000,
+          "501+": 1500000
+        }
+      },
+      "notes": "Includes drapes, centerpieces, backdrop, aisle/stage decor as applicable to event_type."
+    },
+    {
+      "item_id": "lighting_sound",
+      "label": "Lighting & Sound System",
+      "applies_when": "always",
+      "pricing_basis": "flat",
+      "unit_price": { "lean": 60000, "standard": 120000, "premium": 250000 }
+    },
+    {
+      "item_id": "power_backup",
+      "label": "Generator / Power Backup",
+      "applies_when": "power_backup_needed == true OR power_backup_needed missing",
+      "pricing_basis": "flat_by_guest_band",
+      "unit_price": {
+        "lean": { "0-150": 45000, "151-400": 75000, "401+": 120000 },
+        "standard": { "0-150": 60000, "151-400": 100000, "401+": 160000 },
+        "premium": { "0-150": 80000, "151-400": 140000, "401+": 220000 }
+      },
+      "notes": "If power_backup_needed explicitly false, omit this line item entirely."
+    },
+    {
+      "item_id": "ushers_staffing",
+      "label": "Ushers & Event Staff",
+      "applies_when": "always",
+      "pricing_basis": "per_25_guests",
+      "unit_price": { "lean": 15000, "standard": 20000, "premium": 30000 },
+      "notes": "One staffing block per 25 guests, rounded up."
+    },
+    {
+      "item_id": "catering",
+      "label": "Catering",
+      "applies_when": "catering_included == true",
+      "pricing_basis": "per_guest",
+      "unit_price": { "lean": 3500, "standard": 6000, "premium": 12000 },
+      "notes": "Omit this line item entirely if catering_included is false or missing — do not assume catering is wanted."
+    }
+  ],
+
+  "contingencies": [
+    {
+      "contingency_id": "transport_logistics",
+      "label": "Transport & Logistics",
+      "calculation": "flat_or_percentage",
+      "value": { "type": "percentage_of_subtotal", "amount": 0.08 },
+      "notes": "Standard assumption: 8% of subtotal for delivery, setup, and pickup of rented items. In production this would vary by venue distance from the SME's base location — flagged as a simplification for the demo."
+    },
+    {
+      "contingency_id": "rush_fee",
+      "label": "Rush Fee",
+      "calculation": "conditional_percentage",
+      "condition": "event_date is within 7 days of the quote being generated",
+      "value": { "type": "percentage_of_subtotal", "amount": 0.15 },
+      "notes": "Applied only if the event date is very close. Should be clearly itemized and explained in the quote message so it doesn't read as a hidden fee."
+    },
+    {
+      "contingency_id": "fuel_price_buffer",
+      "label": "Fuel/Fluctuation Buffer",
+      "calculation": "flat_percentage",
+      "value": { "type": "percentage_of_subtotal", "amount": 0.05 },
+      "notes": "Small buffer against fuel/generator running costs and general price volatility, common practice among Nigerian event vendors. Always applied."
+    }
+  ],
+
+  "quote_terms": {
+    "validity_period_days": 7,
+    "default_payment_terms": "50% deposit to confirm booking, balance due 3 days before the event.",
+    "notes": "validity_period_days and payment_terms are included in the draft_message_to_client generated by compute_quote."
+  }
+}

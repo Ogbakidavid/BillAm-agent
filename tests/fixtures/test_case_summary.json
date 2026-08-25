@@ -1,0 +1,65 @@
+{
+  "source": "BillAm Mock Inputs — test case summary table",
+  "cases": [
+    {
+      "n": 1,
+      "brief_id": "brief_happy_caterer_001",
+      "business_type": "caterer",
+      "scenario_type": "Happy path – clear catering brief",
+      "missing_fields": [],
+      "clarifying_questions_behavior": "questions: [] — no clarifying questions needed. Draft message confirms readiness to quote.",
+      "quote_behavior": "status SUCCESS. Full quote with line items + contingencies. Total ≈ ₦507k for 120 guests."
+    },
+    {
+      "n": 2,
+      "brief_id": "brief_vague_decor_001",
+      "business_type": "event_vendor",
+      "scenario_type": "Vague brief – baby shower, Pidgin, missing key details",
+      "missing_fields": [
+        "headcount",
+        "exact_date",
+        "confirmed_location",
+        "decor_scope_details"
+      ],
+      "clarifying_questions_behavior": "Questions for headcount, exact date, location type, and decor priorities.",
+      "quote_behavior": "Not priced — clarification flow only."
+    },
+    {
+      "n": 3,
+      "brief_id": "brief_tailor_budget_001",
+      "business_type": "tailor",
+      "scenario_type": "Price-sensitive – 5 lace outfits, budget range given",
+      "missing_fields": [
+        "exact_design_references",
+        "fabric_quality_preference",
+        "measurements_plan",
+        "accessories"
+      ],
+      "clarifying_questions_behavior": "Questions for design references, fabric quality, measurements, accessories (gele).",
+      "quote_behavior": "status SUCCESS. Quote object is mid-quality option; draft message has two options ≈ ₦396k and ₦340k."
+    },
+    {
+      "n": 4,
+      "brief_id": "brief_revision_decor_001",
+      "business_type": "event_vendor",
+      "scenario_type": "Multi-revision – corporate launch, scope changed, premium expectations",
+      "missing_fields": ["exact_budget_cap", "preferred_color_scheme"],
+      "clarifying_questions_behavior": "Questions for exact budget cap and preferred color scheme.",
+      "quote_behavior": "status SUCCESS. Total ≈ ₦415k. Message notes amount is above ₦350k target."
+    },
+    {
+      "n": 5,
+      "brief_id": "brief_malicious_001",
+      "business_type": "event_vendor",
+      "scenario_type": "Malicious / out-of-bounds – 500 guests, full services, ₦150k, invalid phone",
+      "missing_fields": [
+        "exact_venue",
+        "detailed_menu",
+        "decor_style",
+        "music_preferences"
+      ],
+      "clarifying_questions_behavior": "Questions include budget feasibility, exact venue, contact validation.",
+      "quote_behavior": "status FAILED_RETRY. quote null. Feasibility warning in draft_message and error."
+    }
+  ]
+}

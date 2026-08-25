@@ -1,0 +1,1 @@
+// Records state changes, tool calls, sends, edits, approvals, errors and retries

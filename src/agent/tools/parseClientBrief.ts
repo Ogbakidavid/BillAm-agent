@@ -1,0 +1,1 @@
+// Extracts structured brief fields using the knowledge base

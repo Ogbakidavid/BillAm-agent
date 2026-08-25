@@ -1,0 +1,160 @@
+{
+  "source": "BillAm Mock Inputs — expected generate_clarifying_questions outputs",
+  "schema_note": "Mock Inputs tab uses question objects. PRD tool contract uses questions as string[]. Map in tests if needed.",
+  "cases": [
+    {
+      "questions_id": "q_happy_caterer_001",
+      "brief_id": "brief_happy_caterer_001",
+      "business_type": "caterer",
+      "status": "SUCCESS",
+      "questions": [],
+      "draft_message_to_client": "Hello, thanks for reaching out. Based on your message, I have all the details I need to prepare your quote for the birthday event (120 guests, 20th September, Ikeja). I'll work on the quote and send it to you shortly.",
+      "error": null
+    },
+    {
+      "questions_id": "q_vague_decor_001",
+      "brief_id": "brief_vague_decor_001",
+      "business_type": "event_vendor",
+      "status": "SUCCESS",
+      "questions": [
+        {
+          "field": "headcount",
+          "text": "Approximately how many guests are you expecting? (e.g., 80, 90, 100)",
+          "answer_type": "number",
+          "options": null
+        },
+        {
+          "field": "exact_date",
+          "text": "Which Saturday are you considering? Please share the exact date if you have it (e.g., 13th September or 20th September).",
+          "answer_type": "date",
+          "options": null
+        },
+        {
+          "field": "confirmed_location",
+          "text": "Will the event be at your house in Surulere (indoor or outdoor), or are you still considering an online option?",
+          "answer_type": "options",
+          "options": [
+            "Indoor at home",
+            "Outdoor at home",
+            "Online event",
+            "Other venue"
+          ]
+        },
+        {
+          "field": "decor_scope_details",
+          "text": "Which decor items are most important to you? You mentioned backdrop, balloons, and table decoration – please confirm which ones you definitely want.",
+          "answer_type": "options",
+          "options": [
+            "Backdrop only",
+            "Backdrop + balloons",
+            "Backdrop + balloons + table decoration",
+            "Other (please describe)"
+          ]
+        }
+      ],
+      "draft_message_to_client": "Hello, thanks for your message about the baby shower. To give you an accurate quote, please help me with a few details:\n\n1. Approximately how many guests are you expecting? (e.g., 80, 90, 100)\n2. Which Saturday are you considering? Please share the exact date if you have it (e.g., 13th September or 20th September).\n3. Will the event be at your house in Surulere (indoor or outdoor), or are you still considering an online option?\n4. Which decor items are most important to you? You mentioned backdrop, balloons, and table decoration – please confirm which ones you definitely want.\n\nYou can just reply with your answers here.",
+      "error": null
+    },
+    {
+      "questions_id": "q_tailor_budget_001",
+      "brief_id": "brief_tailor_budget_001",
+      "business_type": "tailor",
+      "status": "SUCCESS",
+      "questions": [
+        {
+          "field": "exact_design_references",
+          "text": "Do you have any pictures or style references for the lace outfits? You can describe them or share links if available.",
+          "answer_type": "text",
+          "options": null
+        },
+        {
+          "field": "fabric_quality_preference",
+          "text": "For the lace and satin, would you prefer premium quality, standard quality, or are you open to suggestions based on your budget?",
+          "answer_type": "options",
+          "options": [
+            "Premium quality",
+            "Standard quality",
+            "Open to suggestions"
+          ]
+        },
+        {
+          "field": "measurements_plan",
+          "text": "Have you already taken measurements for the 5 ladies, or will you come to the shop for measurements?",
+          "answer_type": "options",
+          "options": [
+            "Measurements already taken",
+            "Will come to shop for measurements",
+            "Not sure yet"
+          ]
+        },
+        {
+          "field": "accessories",
+          "text": "Do you also want matching headgear (gele) or any other accessories included in the quote?",
+          "answer_type": "options",
+          "options": [
+            "Yes, for all 5",
+            "Yes, for some (please specify)",
+            "No, only outfits"
+          ]
+        }
+      ],
+      "draft_message_to_client": "Hello, thanks for reaching out about the wedding outfits. To give you the best quote, please help me with a few details:\n\n1. Do you have any pictures or style references for the lace outfits? You can describe them or share links if available.\n2. For the lace and satin, would you prefer premium quality, standard quality, or are you open to suggestions based on your budget?\n3. Have you already taken measurements for the 5 ladies, or will you come to the shop for measurements?\n4. Do you also want matching headgear (gele) or any other accessories included in the quote?\n\nYou can just reply with your answers here.",
+      "error": null
+    },
+    {
+      "questions_id": "q_revision_decor_001",
+      "brief_id": "brief_revision_decor_001",
+      "business_type": "event_vendor",
+      "status": "SUCCESS",
+      "questions": [
+        {
+          "field": "exact_budget_cap",
+          "text": "What is the maximum budget you are comfortable with for the decor (in ₦)? This will help us tailor the options to your range.",
+          "answer_type": "number",
+          "options": null
+        },
+        {
+          "field": "preferred_color_scheme",
+          "text": "Do you have preferred colors or branding colors for the backdrop and decorations? Please share any color codes or descriptions (e.g., red and gold, company colors).",
+          "answer_type": "text",
+          "options": null
+        }
+      ],
+      "draft_message_to_client": "Hello, thanks for the details about your corporate launch. To finalize your quote, please help me with two more things:\n\n1. What is the maximum budget you are comfortable with for the decor (in ₦)? This will help us tailor the options to your range.\n2. Do you have preferred colors or branding colors for the backdrop and decorations? Please share any color codes or descriptions (e.g., red and gold, company colors).\n\nYou can just reply with your answers here.",
+      "error": null
+    },
+    {
+      "questions_id": "q_malicious_001",
+      "brief_id": "brief_malicious_001",
+      "business_type": "event_vendor",
+      "status": "SUCCESS",
+      "questions": [
+        {
+          "field": "budget_feasibility",
+          "text": "Thank you for sharing your plans. Based on what you described (500 guests with full catering, decor, music, photography), a total budget of ₦150,000 may not be realistic. Are you open to either increasing the budget or reducing the scope (e.g., fewer guests or fewer services)?",
+          "answer_type": "options",
+          "options": [
+            "Open to increasing budget",
+            "Open to reducing scope",
+            "Want to discuss options",
+            "Not sure yet"
+          ]
+        },
+        {
+          "field": "exact_venue",
+          "text": "Please share the exact venue or area where the event will be held (e.g., hall name, address, or LGA). This affects pricing for logistics and transport.",
+          "answer_type": "text",
+          "options": null
+        },
+        {
+          "field": "contact_validation",
+          "text": "We tried to save your contact number, but it seems incomplete. Please confirm your correct phone number (with country code, e.g., +234...).",
+          "answer_type": "text",
+          "options": null
+        }
+      ],
+      "draft_message_to_client": "Hello, thanks for sharing your wedding reception plans. Before we proceed, I need to clarify a few important points:\n\n1. Based on what you described (500 guests with full catering, decor, music, photography), a total budget of ₦150,000 may not be realistic. Are you open to either increasing the budget or reducing the scope (e.g., fewer guests or fewer services)?\n2. Please share the exact venue or area where the event will be held (e.g., hall name, address, or LGA). This affects pricing for logistics and transport.\n3. We tried to save your contact number, but it seems incomplete. Please confirm your correct phone number (with country code, e.g., +234...).\n\nYou can just reply with your answers here.",
+      "error": null
+    }
+  ]
+}

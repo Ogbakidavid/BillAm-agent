@@ -1,0 +1,170 @@
+{
+  "business_type": "event_vendor",
+  "version": "1.0",
+  "description": "Required/optional field schema for Nigerian event-vendor SMEs (decor, planning, logistics for weddings, parties, corporate events). Used by parse_client_brief to detect what's present/missing in a client brief, and by generate_clarifying_questions to know which fields to ask about and how.",
+
+  "required_fields": [
+    {
+      "field_id": "event_type",
+      "label": "Event Type",
+      "description": "The kind of event being planned. Drives which price-catalog items apply and how the quote is framed.",
+      "type": "enum",
+      "options": [
+        "wedding",
+        "engagement",
+        "birthday",
+        "corporate",
+        "burial/funeral",
+        "child_dedication",
+        "graduation",
+        "other"
+      ],
+      "extraction_hints": [
+        "Client may say 'wedding', 'owambe', 'intro/traditional wedding', 'white wedding', 'birthday party', 'send-forth', 'corporate event', 'burial', 'naming ceremony'",
+        "'Owambe' is a general Nigerian term for a lavish party — if used with no further detail, treat event_type as ambiguous and ask"
+      ],
+      "clarifying_question_templates": [
+        "What kind of event is this — a wedding, birthday, corporate event, or something else?",
+        "Just so I can plan properly, what's the occasion for this event?"
+      ]
+    },
+    {
+      "field_id": "guest_count",
+      "label": "Guest Count",
+      "description": "Expected number of attendees. Primary driver of seating, catering-adjacent, and space-rental line items.",
+      "type": "integer",
+      "validation": { "min": 1, "max": 5000 },
+      "extraction_hints": [
+        "Client may give a range ('100-150 people') — store as a range or take the upper bound depending on downstream pricing logic; flag ranges for the agent's reasoning notes",
+        "Vague quantifiers like 'small', 'intimate', 'plenty of people' should NOT be auto-converted to a number — treat as missing and ask for a number"
+      ],
+      "clarifying_question_templates": [
+        "About how many guests are you expecting?",
+        "Roughly how many people will be attending — even an estimate helps."
+      ]
+    },
+    {
+      "field_id": "event_date",
+      "label": "Event Date",
+      "description": "The date (or date range) the event will take place. Drives rush-fee logic and availability messaging.",
+      "type": "date",
+      "extraction_hints": [
+        "Client may give relative dates ('next month', 'in 3 weeks', 'this Saturday') — resolve relative to the message's received_at timestamp where possible; if not resolvable with confidence, treat as missing and ask for a specific date",
+        "'Next month' alone (no day) should be flagged as partially missing — ask for a specific date"
+      ],
+      "clarifying_question_templates": [
+        "What date are you looking at for the event?",
+        "Do you have a specific date in mind, or a date range I should plan around?"
+      ]
+    },
+    {
+      "field_id": "venue_location",
+      "label": "Venue / Location",
+      "description": "Where the event will be held (venue name, or at minimum a city/area). Affects transport/logistics contingency in pricing.",
+      "type": "string",
+      "extraction_hints": [
+        "Accept either a specific venue name ('Eko Hotel', 'my compound in Ikeja') or a general area if venue isn't booked yet ('somewhere in Lekki')",
+        "If client says venue is 'not yet decided,' treat this field as present but flagged 'venue_tbd: true' rather than missing — don't re-ask, note it in the quote as a placeholder assumption"
+      ],
+      "clarifying_question_templates": [
+        "Where will the event be held — do you have a venue yet?",
+        "What area or venue are you planning for?"
+      ]
+    },
+    {
+      "field_id": "budget_range",
+      "label": "Budget Range",
+      "description": "Client's stated budget, exact or approximate. Used to shape which price-catalog tier the quote leans toward.",
+      "type": "string",
+      "extraction_hints": [
+        "Accept vague statements ('budget tight', 'nothing too expensive', 'around 500k') — vague-but-present statements should still count as 'provided' since they carry real signal; only fully absent budget mentions count as missing",
+        "'Budget tight' alone is enough to mark the field present — the agent should lean toward the lower price-catalog tier when computing the quote, not ask a follow-up unless the brief is missing everything else too"
+      ],
+      "clarifying_question_templates": [
+        "Do you have a budget range in mind for this?",
+        "What kind of budget are you working with, roughly?"
+      ]
+    }
+  ],
+
+  "optional_fields": [
+    {
+      "field_id": "event_duration",
+      "label": "Event Duration / Timing",
+      "description": "How long the event runs, or start time. Affects staffing and equipment-rental duration line items.",
+      "type": "string",
+      "clarifying_question_templates": [
+        "What time will the event start, and about how long will it run?"
+      ]
+    },
+    {
+      "field_id": "indoor_outdoor",
+      "label": "Indoor or Outdoor",
+      "description": "Affects whether canopy/tent, generator, and weather-contingency line items apply.",
+      "type": "enum",
+      "options": ["indoor", "outdoor", "both"],
+      "clarifying_question_templates": [
+        "Will this be indoors, outdoors, or a mix of both?"
+      ]
+    },
+    {
+      "field_id": "decor_theme",
+      "label": "Decor Theme / Color Scheme",
+      "description": "Client's aesthetic preference, if any. Does not block quote generation if missing — a standard/neutral theme is assumed.",
+      "type": "string",
+      "clarifying_question_templates": [
+        "Do you have a color scheme or theme in mind, or should we recommend one?"
+      ]
+    },
+    {
+      "field_id": "power_backup_needed",
+      "label": "Power Backup (Generator) Needed",
+      "description": "Whether a generator/inverter is needed — common line item for Nigerian events given grid reliability. Defaults to 'yes, small unit' if venue power is uncertain and not explicitly declined.",
+      "type": "boolean",
+      "clarifying_question_templates": [
+        "Should we include backup power (generator) for the event, or does the venue already have that covered?"
+      ]
+    },
+    {
+      "field_id": "catering_included",
+      "label": "Catering Required",
+      "description": "Whether the vendor should include catering in the quote, or the client is sourcing food separately. Only relevant if the SME's offering includes catering as an add-on.",
+      "type": "boolean",
+      "clarifying_question_templates": [
+        "Will you need catering included, or is that being handled separately?"
+      ]
+    },
+    {
+      "field_id": "special_requirements",
+      "label": "Special Requirements",
+      "description": "Anything else the client mentions unprompted — accessibility needs, religious/cultural specifics, VIP arrangements, security requests. Free text, never blocks quote generation.",
+      "type": "string",
+      "clarifying_question_templates": [
+        "Anything special I should know about — cultural requirements, VIP guests, accessibility needs, that sort of thing?"
+      ]
+    }
+  ],
+
+  "field_completeness_rules": {
+    "required_for_quote": [
+      "event_type",
+      "guest_count",
+      "event_date",
+      "venue_location",
+      "budget_range"
+    ],
+    "notes": "A brief is considered complete for compute_quote once all fields in required_for_quote are present (including 'present but flagged' states like venue_tbd or vague-budget). Optional fields never block quote generation — the agent should proceed with reasonable defaults and note any assumptions in the quote's terms."
+  },
+
+  "ambiguity_handling": {
+    "vague_quantifiers_not_accepted": [
+      "small",
+      "big",
+      "plenty",
+      "a lot",
+      "not too many",
+      "intimate gathering"
+    ],
+    "note": "These describe guest_count in words but should not be silently converted to a number. Treat guest_count as missing and ask for an estimate, even a rough one, rather than guessing a figure that could badly skew the quote."
+  }
+}
