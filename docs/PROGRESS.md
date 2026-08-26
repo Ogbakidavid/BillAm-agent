@@ -16,7 +16,7 @@
 | Task | Status | Related Files |
 |---|---|---|
 | **PM-01** Finalize MVP Operating Rules | ✅ Complete | [`docs/ARCHITECTURE_REVISED.md`](./ARCHITECTURE_REVISED.md), [`docs/TECHNICAL_SPECIFICATION_CROSSCHECKED.md`](./TECHNICAL_SPECIFICATION_CROSSCHECKED.md), [`docs/FILE_STRUCTURE.md`](./FILE_STRUCTURE.md) |
-| **BE-01** Implement Core Job State Machine | 🔶 In Progress | [`src/types/Job.ts`](../src/types/Job.ts) — `JobState` type + all 8 states fully defined. [`src/state/stateMachine.ts`](../src/state/stateMachine.ts) — stub only, transition logic not yet implemented. |
+| **BE-01** Implement Core Job State Machine | ✅ Complete | [`src/types/Job.ts`](../src/types/Job.ts) — `JobState` type + all 8 states fully defined. [`src/state/stateMachine.ts`](../src/state/stateMachine.ts) — transition validator fully implemented (`transitionJob`, `isValidTransition`), including explicit rejection of `CLARIFYING → EXECUTED` (v1 bug guard). [`tests/state/stateMachine.test.ts`](../tests/state/stateMachine.test.ts) — 12 unit tests, all passing. |
 | **CI-01** Cloud and Model Provider Configuration | 🔶 In Progress | [`src/config/env.ts`](../src/config/env.ts) — all env vars declared (AWS, Anthropic, Strands). [`src/llm/LLMClient.ts`](../src/llm/LLMClient.ts), [`src/llm/BedrockLLMClient.ts`](../src/llm/BedrockLLMClient.ts), [`src/llm/AnthropicLLMClient.ts`](../src/llm/AnthropicLLMClient.ts), [`src/llm/providerFactory.ts`](../src/llm/providerFactory.ts) — stubs only, provider logic not yet implemented. |
 
 ---
@@ -181,7 +181,6 @@
 - **Agent loop flow documentation** (`src/agent/orchestration/agentLoop.ts`)
 
 ### What Comes Next (BE + CI to implement)
-- `src/state/stateMachine.ts` — Transition validator logic (BE-01)
 - `src/state/JobStore.ts` — In-memory job store (BE-02)
 - `src/state/auditLog.ts` — Audit event writer (BE-06)
 - `src/agent/tools/*.ts` — All 5 Strands tool implementations (BE-04 through BE-08)
