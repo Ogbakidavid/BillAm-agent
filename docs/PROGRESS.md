@@ -26,7 +26,7 @@
 | Task | Status | Related Files |
 |---|---|---|
 | **PM-02** Finalize Event Vendor Knowledge Base and Price Catalog | ✅ Complete | [`src/data/knowledge_base/event_vendor.json`](../src/data/knowledge_base/event_vendor.json), [`src/data/price_catalog/event_vendor.json`](../src/data/price_catalog/event_vendor.json) |
-| **BE-02** Job Creation, Message Persistence and `IngestChatMessage` | ❌ Incomplete | [`src/agent/tools/ingestChatMessage.ts`](../src/agent/tools/ingestChatMessage.ts) — stub only. [`src/state/JobStore.ts`](../src/state/JobStore.ts) — stub only. |
+| **BE-02** Job Creation, Message Persistence and `IngestChatMessage` | 🔶 In Progress | [`src/agent/tools/ingestChatMessage.ts`](../src/agent/tools/ingestChatMessage.ts) — stub only. [`src/state/JobStore.ts`](../src/state/JobStore.ts) — stub only. |
 | **CI-02** Local Runtime, Startup, Logging and Environment Validation | ✅ Complete | [`src/index.ts`](../src/index.ts) — server startup with graceful shutdown fully implemented. [`src/utils/logger.ts`](../src/utils/logger.ts) — structured logger with level filtering fully implemented. [`src/config/env.ts`](../src/config/env.ts) — env validation implemented. |
 
 ---
