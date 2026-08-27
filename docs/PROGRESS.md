@@ -62,10 +62,10 @@
 
 ## Day 6 — Simulated Messaging
 
-| Task                                                | Status        | Related Files                                                                                                                                                       |
-| --------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **BE-06** `SimulateSendMessage` Tool Implementation | ❌ Incomplete | [`src/agent/tools/simulateSendMessage.ts`](../src/agent/tools/simulateSendMessage.ts) — stub only. [`src/state/auditLog.ts`](../src/state/auditLog.ts) — stub only. |
-| **CI-04** Connect Backend to Simulated Chat UI      | ❌ Incomplete | No frontend UI files exist yet.                                                                                                                                     |
+| Task                                                | Status         | Related Files                                                                                                                                                                                                                                                                                                      |
+| --------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **BE-06** `SimulateSendMessage` Tool Implementation | 🔶 In Progress | [`src/state/auditLog.ts`](../src/state/auditLog.ts) — fully implemented (logStateTransition, logClarificationSent, logQuoteApproved, logQuoteEdited, getAuditTrail), 6 unit tests passing. [`src/agent/tools/simulateSendMessage.ts`](../src/agent/tools/simulateSendMessage.ts) — stub only, not yet implemented. |
+| **CI-04** Connect Backend to Simulated Chat UI      | ❌ Incomplete  | No frontend UI files exist yet.                                                                                                                                                                                                                                                                                    |
 
 ---
 
