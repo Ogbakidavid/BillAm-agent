@@ -1,7 +1,7 @@
 /** @type {import("jest").Config} */
 module.exports = {
   testEnvironment: "node",
-  roots: ["<rootDir>/tests"],
+  roots: ["<rootDir>/tests", "<rootDir>/src"],
   testMatch: ["**/?(*.)+(spec|test).ts"],
   moduleFileExtensions: ["ts", "js", "json"],
   collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts"],
@@ -20,5 +20,8 @@ module.exports = {
         },
       },
     ],
+  },
+  moduleNameMapper: {
+    "^@strands-agents/sdk$": "<rootDir>/tests/__mocks__/strandsSdkMock.ts",
   },
 };
