@@ -1,7 +1,7 @@
 /** @type {import("jest").Config} */
 module.exports = {
   testEnvironment: "node",
-  roots: ["<rootDir>/test"],
+  roots: ["<rootDir>/tests"],
   testMatch: ["**/?(*.)+(spec|test).ts"],
   moduleFileExtensions: ["ts", "js", "json"],
   collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts"],
