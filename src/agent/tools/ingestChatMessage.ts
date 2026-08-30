@@ -4,7 +4,6 @@ import {
   IngestChatMessageInput,
   IngestChatMessageOutput,
 } from "../../types/ToolContracts";
-import type { LLMClient } from "../../llm/LLMClient"; // Type hint only
 
 const ingestChatMessageInputSchema = z.object({
   job_id: z.string().optional(),

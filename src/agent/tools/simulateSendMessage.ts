@@ -9,7 +9,6 @@ import {
   SimulateSendMessageInput,
   SimulateSendMessageOutput,
 } from "../../types/ToolContracts";
-import type { LLMClient } from "../../llm/LLMClient"; // Type hint only
 
 // CRITICAL ARCHITECTURAL INVARIANT: Quotes require mandatory SME approval (required_approval: true)
 const simulateSendMessageInputSchema = z

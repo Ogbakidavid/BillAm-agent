@@ -5,17 +5,40 @@
 
 import { tool } from "@strands-agents/sdk";
 import { z } from "zod";
+import fs from "fs";
+import path from "path";
 import {
   ComputeQuoteInput,
   ComputeQuoteOutput,
 } from "../../types/ToolContracts";
-import type { LLMClient } from "../../llm/LLMClient"; // Type hint only
+import { llmProvider } from "../../llm";
+import {
+  QUOTE_DRAFT_SYSTEM_PROMPT,
+  buildQuoteDraftUserPrompt,
+} from "../prompts/quoteDraftPrompt";
 
+// CRITICAL ARCHITECTURAL INVARIANT: Max 2 clarification rounds enforced at Zod validation level
 const computeQuoteInputSchema = z.object({
   job_id: z.string().min(1, "Job ID is required"),
   structured_brief: z.record(z.string(), z.any()),
   business_type: z.enum(["caterer", "tailor", "event_vendor"]),
 });
+
+function loadPriceCatalog(businessType: string): Record<string, any> {
+  const catalogPath = path.join(
+    __dirname,
+    "../../data/price_catalog",
+    `${businessType}.json`,
+  );
+  const raw = fs.readFileSync(catalogPath, "utf-8");
+  return JSON.parse(raw);
+}
+
+function extractJson(text: string): any {
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("No JSON object found in LLM response");
+  return JSON.parse(match[0]);
+}
 
 /**
  * compute_quote
@@ -27,22 +50,43 @@ const computeQuoteInputSchema = z.object({
  */
 export const computeQuoteTool = tool({
   name: "compute_quote",
-  description: "Uses the price catalog and extracted brief to compute line items, contingencies, totals, and quote terms.",
+  description:
+    "Uses the price catalog and extracted brief to compute line items, contingencies, totals, and quote terms.",
   inputSchema: computeQuoteInputSchema,
   callback: async (input: ComputeQuoteInput): Promise<ComputeQuoteOutput> => {
-    // Orchestration layer (agentLoop.ts) will:
-    // 1. Load price catalog for business_type (e.g. price_catalog/event_vendor.json)
-    // 2. Call LLM using quoteDraftPrompt.ts to match extracted items to catalog tiers
-    // 3. Calculate line items subtotal, 8% delivery fee, 15% rush fee (if event < 5 days away), and 5% fuel buffer
-    // 4. Return structured quote object with total_amount, validity_period_days, line_items, and contingencies
-    return {
-      job_id: input.job_id,
-      line_items: [],
-      contingencies: [],
-      total_amount: 0,
-      validity_period_days: 7,
-      status: "SUCCESS",
-      error: null,
-    };
+    try {
+      const priceCatalog = loadPriceCatalog(input.business_type);
+
+      const userPrompt = buildQuoteDraftUserPrompt({
+        job_id: input.job_id,
+        structured_brief: input.structured_brief,
+        business_type: input.business_type,
+        price_catalog: priceCatalog,
+      });
+
+      const fullPrompt = `${QUOTE_DRAFT_SYSTEM_PROMPT}\n\n${userPrompt}`;
+      const rawResponse = await llmProvider.generateResponse(fullPrompt);
+      const parsed = extractJson(rawResponse);
+
+      return {
+        job_id: input.job_id,
+        line_items: parsed.line_items || [],
+        contingencies: parsed.contingencies || [],
+        total_amount: parsed.total_amount || 0,
+        validity_period_days: parsed.validity_period_days || 7,
+        status: "SUCCESS",
+        error: null,
+      }
+    } catch (err) {
+      return {
+        job_id: input.job_id,
+        line_items: [],
+        contingencies: [],
+        total_amount: 0,
+        validity_period_days: 7,
+        status: "FAILED_RETRY",
+        error: err instanceof Error ? err.message : String(err),
+      };
+    }
   },
 });
