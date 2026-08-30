@@ -2,14 +2,16 @@
  * parseClientBrief.ts
  * Extracts structured brief fields using the knowledge base
  */
-
 import { tool } from "@strands-agents/sdk";
 import { z } from "zod";
+import fs from "fs";
+import path from "path";
 import {
   ParseClientBriefInput,
   ParseClientBriefOutput,
 } from "../../types/ToolContracts";
-import type { LLMClient } from "../../llm/LLMClient"; // Type hint only
+import { llmProvider } from "../../llm";
+import { PARSE_BRIEF_SYSTEM_PROMPT, buildParseBriefUserPrompt } from "../prompts/parseBriefPrompt";
 
 const parseClientBriefInputSchema = z.object({
   job_id: z.string().min(1, "Job ID is required"),
@@ -18,26 +20,63 @@ const parseClientBriefInputSchema = z.object({
   existing_fields: z.record(z.string(), z.any()).optional(),
 });
 
-/**
- * parse_client_brief
- * Strands Tool definition for extracting structured brief fields using business knowledge base.
- */
+function loadKnowledgeBase(businessType: string): Record<string, any> {
+  const kbPath = path.join(__dirname, "../../data/knowledge_base", `${businessType}.json`);
+  const raw = fs.readFileSync(kbPath, "utf-8");
+  return JSON.parse(raw);
+}
+
+function extractJson(text: string): any {
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("No JSON object found in LLM response");
+  return JSON.parse(match[0]);
+}
+
 export const parseClientBriefTool = tool({
   name: "parse_client_brief",
   description: "Extracts structured brief fields and identifies missing required fields using the business knowledge base.",
   inputSchema: parseClientBriefInputSchema,
   callback: async (input: ParseClientBriefInput): Promise<ParseClientBriefOutput> => {
-    // Orchestration layer (agentLoop.ts) will:
-    // 1. Load the knowledge base for business_type (e.g. event_vendor.json)
-    // 2. Call LLM via LLMClient using parseBriefPrompt.ts
-    // 3. Parse JSON response and merge multi-turn extracted fields with existing_fields
-    // 4. Compare extracted fields against required fields to compute missing_required_fields
-    return {
-      job_id: input.job_id,
-      extracted_fields: input.existing_fields || {},
-      missing_required_fields: [],
-      status: "SUCCESS",
-      error: null,
-    };
+    try {
+      const knowledgeBase = loadKnowledgeBase(input.business_type);
+
+      const userPrompt = buildParseBriefUserPrompt({
+        job_id: input.job_id,
+        message_text: input.message_text,
+        business_type: input.business_type,
+        existing_fields: input.existing_fields,
+        knowledge_base: knowledgeBase,
+      });
+
+      const fullPrompt = `${PARSE_BRIEF_SYSTEM_PROMPT}\n\n${userPrompt}`;
+      const rawResponse = await llmProvider.generateResponse(fullPrompt);
+      const parsed = extractJson(rawResponse);
+
+      const mergedFields = {
+        ...(input.existing_fields || {}),
+        ...(parsed.extracted_fields || {}),
+      };
+
+      const requiredFields: string[] = knowledgeBase.field_completeness_rules.required_for_quote;
+      const missingFields = requiredFields.filter(
+        (field) => mergedFields[field] === undefined || mergedFields[field] === null
+      );
+
+      return {
+        job_id: input.job_id,
+        extracted_fields: mergedFields,
+        missing_required_fields: missingFields,
+        status: "SUCCESS",
+        error: null,
+      };
+    } catch (err) {
+      return {
+        job_id: input.job_id,
+        extracted_fields: input.existing_fields || {},
+        missing_required_fields: [],
+        status: "FAILED_RETRY",
+        error: err instanceof Error ? err.message : String(err),
+      };
+    }
   },
 });
