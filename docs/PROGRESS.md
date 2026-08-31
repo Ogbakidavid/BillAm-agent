@@ -34,7 +34,7 @@
 | Task | Status | Related Files |
 |---|---|---|
 | **PM-03** Freeze Demo Flow | ✅ Complete | [`docs/TASK_BREAKDOWN.md`](./TASK_BREAKDOWN.md), [`docs/TECHNICAL_SPECIFICATION_CROSSCHECKED.md`](./TECHNICAL_SPECIFICATION_CROSSCHECKED.md) — flow fully documented. |
-| **BE-03** Implement Agent Loop Routing | 🔶 In Progress | [`src/agent/orchestration/agentLoop.ts`](../src/agent/orchestration/agentLoop.ts) — full 5-step orchestration flow documented in JSDoc comments (INGESTING → REASONING → CLARIFYING / NEEDS_SME_INPUT / AWAITING_HUMAN_APPROVAL / FAILED_RETRY). Execution logic pending tool integration. |
+| **BE-03** Implement Agent Loop Routing | ✅ Complete | [`src/agent/orchestration/agentLoop.ts`](../src/agent/orchestration/agentLoop.ts) — full orchestration implemented, wires state machine, JobStore, auditLog, and all 5 tools together per the documented flow. |
 | **CI-03** Timeout Handling, Provider Errors and Fallback Readiness | 🔶 In Progress | [`src/llm/providerFactory.ts`](../src/llm/providerFactory.ts) — provider fallback and retry strategy implemented and tested. Bedrock & Anthropic concrete SDK implementations pending credential configuration. |
 
 ---
@@ -71,7 +71,7 @@
 | Task | Status | Related Files |
 |---|---|---|
 | **PM-06** Review Clarification Behavior | ✅ Complete | [`docs/TECHNICAL_SPECIFICATION_CROSSCHECKED.md`](./TECHNICAL_SPECIFICATION_CROSSCHECKED.md) — Section 3.3 clarification round logic documented. |
-| **BE-07** Full Clarification Loop (`REASONING → CLARIFYING → send → INGESTING → REASONING`) | 🔶 In Progress | All 5 tools (`src/agent/tools/*.ts`) and `JobStore` are complete with tests. Wiring into `agentLoop.ts` pending. |
+| **BE-07** Full Clarification Loop (`REASONING → CLARIFYING → send → INGESTING → REASONING`) | ✅ Complete | Fully wired in `agentLoop.ts`, verified by `tests/integration/agentFlow.test.ts`. |
 
 ---
 
@@ -136,7 +136,7 @@
 
 | Task | Status | Related Files |
 |---|---|---|
-| **BE-14** Stabilize Full End-to-End Flow | ❌ Incomplete | Depends on agentLoop wiring. |
+| **BE-14** Stabilize Full End-to-End Flow | ✅ Complete | [`tests/integration/agentFlow.test.ts`](../tests/integration/agentFlow.test.ts) — 4 real tests covering all documented flows (clarification loop, quote generation with no-auto-send safeguard, escalation past cap, failure handling), all passing. |
 | **CI-07** Validate Deployment, Provider Configuration and Fallback | ❌ Incomplete | — |
 
 ---
@@ -184,3 +184,4 @@
 - Wire tools into `src/agent/orchestration/agentLoop.ts` (BE-03 / BE-07) — **only remaining backend blocker for E2E flow**
 - Implement Bedrock & Anthropic SDK calls in `src/llm/BedrockLLMClient.ts` & `AnthropicLLMClient.ts` (CI-03) — replace stub `throw` with actual API calls
 - Convert integration test stubs in `tests/integration/agentFlow.test.ts` to real E2E tests (BE-14)
+| **BE-03** Implement Agent Loop Routing | 🔶 In Progress | [`src/agent/orchestration/agentLoop.ts`](../src/agent/orchestration/agentLoop.ts) — full 5-step orchestration flow documented in JSDoc comments (INGESTING → REASONING → CLARIFYING / NEEDS_SME_INPUT / AWAITING_HUMAN_APPROVAL / FAILED_RETRY). Execution logic pending tool integration. |
