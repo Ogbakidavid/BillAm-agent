@@ -88,9 +88,9 @@
 
 | Task | Status | Related Files |
 |---|---|---|
-| **BE-09** Quote Retrieval, Editing and Audit History | ❌ Incomplete | [`src/api/jobs.handlers.ts`](../src/api/jobs.handlers.ts) — stub only. [`src/api/jobs.routes.ts`](../src/api/jobs.routes.ts) — route declarations listed as comments. |
-| **BE-10** Explicit SME Approval Endpoint | ❌ Incomplete | [`src/api/jobs.routes.ts`](../src/api/jobs.routes.ts) — `POST /:id/approve_quote` noted as comment only. |
-| **CI-05** Deployable Runtime, Variables and Health Checks | 🔶 In Progress | [`src/index.ts`](../src/index.ts) — server starts and graceful shutdown works. [`src/app.ts`](../src/app.ts) — `GET /health` endpoint implemented. |
+| **BE-09** Quote Retrieval, Editing and Audit History | ✅ Complete | [`src/api/jobs.handlers.ts`](../src/api/jobs.handlers.ts) — fully implemented (`getQuoteHandler`, `editQuoteHandler` with validation, state guards, audit logging, total recalculation). [`src/api/jobs.routes.ts`](../src/api/jobs.routes.ts) — `GET /:id/quote`, `PATCH /:id/quote` routes registered. [`tests/api/jobs.api.test.ts`](../tests/api/jobs.api.test.ts) — 6 integration tests passing. |
+| **BE-10** Explicit SME Approval Endpoint | ✅ Complete | [`src/api/jobs.handlers.ts`](../src/api/jobs.handlers.ts) — `approveQuoteHandler` fully implemented with approval validation, quote sending via `simulateSendMessageTool`, state transition to `EXECUTED`, audit logging. [`src/api/jobs.routes.ts`](../src/api/jobs.routes.ts) — `POST /:id/approve_quote` route registered. [`tests/api/jobs.api.test.ts`](../tests/api/jobs.api.test.ts) — approval test passing. |
+| **CI-05** Deployable Runtime, Variables and Health Checks | ✅ Complete | [`src/index.ts`](../src/index.ts) — server startup with graceful shutdown fully implemented. [`src/app.ts`](../src/app.ts) — `GET /health` endpoint implemented. [`src/config/env.ts`](../src/config/env.ts) — env validation with required/optional vars. |
 
 ---
 
@@ -99,7 +99,7 @@
 | Task | Status | Related Files |
 |---|---|---|
 | **PM-08** Define Missing-Field Summaries and Manual Recovery Examples | ✅ Complete | [`src/agent/prompts/smeSummaryPrompt.ts`](../src/agent/prompts/smeSummaryPrompt.ts) — full escalation summary prompt + `buildSmeSummaryUserPrompt()` helper implemented for `NEEDS_SME_INPUT` and `FAILED_RETRY` scenarios. |
-| **BE-11** `NEEDS_SME_INPUT → REASONING` Recovery (`POST /jobs/:id/manual_input`) | ❌ Incomplete | [`src/api/jobs.routes.ts`](../src/api/jobs.routes.ts) — `POST /:id/manual_input` noted as comment only. |
+| **BE-11** `NEEDS_SME_INPUT → REASONING` Recovery (`POST /jobs/:id/manual_input`) | ✅ Complete | [`src/api/jobs.handlers.ts`](../src/api/jobs.handlers.ts) — `getMissingFieldsHandler` & `manualInputHandler` fully implemented with state validation, field merging, transition to `REASONING`, and agent loop re-invocation. [`src/api/jobs.routes.ts`](../src/api/jobs.routes.ts) — `GET /:id/missing_fields`, `POST /:id/manual_input` routes registered. [`tests/api/jobs.api.test.ts`](../tests/api/jobs.api.test.ts) — 4 integration tests passing. |
 
 ---
 
@@ -164,9 +164,9 @@
 
 | Status | Count |
 |---|---|
-| ✅ **Complete** | **18** |
-| 🔶 **In Progress** | **6** |
-| ❌ **Incomplete** | **15** |
+| ✅ **Complete** | **22** |
+| 🔶 **In Progress** | **5** |
+| ❌ **Incomplete** | **12** |
 
 ### What Is Fully Complete
 - All **5 Strands Tool Definitions & Zod Schemas** (`src/agent/tools/`)
@@ -177,8 +177,10 @@
 - All **5 Prompt Templates** (`src/agent/prompts/`)
 - All **Data Catalogs & Transcripts** (`src/data/`)
 - **Application Core & Infrastructure** (`src/app.ts`, `src/index.ts`, `src/config/env.ts`, `README.md`, `docs/AGENTS.md`)
-- **Clean Build & Test Suite** (`npx tsc --noEmit` = 0 errors, `pnpm test` = 11 suites passing)
+- **REST API Layer** — All 8 endpoints (`src/api/`) with validation, state guards, audit logging, 16 integration tests passing
+- **Clean Build & Test Suite** (`npx tsc --noEmit` = 0 errors, `pnpm test` = 11 suites, 62 tests passing)
 
-### Next Action Items (Orchestration & REST API)
-- Wire tools into `src/agent/orchestration/agentLoop.ts` (BE-03 / BE-07)
-- Implement REST API endpoints in `src/api/jobs.routes.ts` & `jobs.handlers.ts` (BE-09, BE-10, BE-11)
+### Next Action Items (Orchestration & LLM Integration)
+- Wire tools into `src/agent/orchestration/agentLoop.ts` (BE-03 / BE-07) — **only remaining backend blocker for E2E flow**
+- Implement Bedrock & Anthropic SDK calls in `src/llm/BedrockLLMClient.ts` & `AnthropicLLMClient.ts` (CI-03) — replace stub `throw` with actual API calls
+- Convert integration test stubs in `tests/integration/agentFlow.test.ts` to real E2E tests (BE-14)
