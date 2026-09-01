@@ -65,7 +65,7 @@ export const generateClarifyingQuestionsTool = tool({
       const parsed = extractJson(rawResponse);
       return {
         job_id: input.job_id,
-        questions: parsed.questions || [],
+        questions: (parsed.questions || []).slice(0, 5),
         draft_message_to_client: parsed.draft_message_to_client || "",
         status: "SUCCESS",
         error: null,
