@@ -68,15 +68,27 @@ export const computeQuoteTool = tool({
       const rawResponse = await llmProvider.generateResponse(fullPrompt);
       const parsed = extractJson(rawResponse);
 
+      const quoteData = parsed.quote || parsed;
+
+      const lineItems = (quoteData.line_items || []).map((item: any) => ({
+        label: item.label,
+        amount: item.subtotal ?? item.amount ?? 0,
+      }));
+
+      const contingencies = (quoteData.contingencies || []).map((c: any) => ({
+        label: c.label,
+        amount: c.amount ?? 0,
+      }));
+
       return {
         job_id: input.job_id,
-        line_items: parsed.line_items || [],
-        contingencies: parsed.contingencies || [],
-        total_amount: parsed.total_amount || 0,
-        validity_period_days: parsed.validity_period_days || 7,
+        line_items: lineItems,
+        contingencies: contingencies,
+        total_amount: quoteData.total_amount || 0,
+        validity_period_days: quoteData.validity_period_days || 7,
         status: "SUCCESS",
         error: null,
-      }
+      };
     } catch (err) {
       return {
         job_id: input.job_id,
