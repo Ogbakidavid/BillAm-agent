@@ -1,0 +1,233 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "BillAm Agent API",
+    "version": "1.0.0",
+    "description": "Job-oriented REST API for BillAm Agent — autonomous SME quoting & clarification engine."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Returns server status and timestamp.",
+        "responses": {
+          "200": {
+            "description": "Server healthy"
+          }
+        }
+      }
+    },
+    "/jobs": {
+      "post": {
+        "summary": "Create Job",
+        "description": "Creates a new job session for a specific business.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["business_id", "business_type"],
+                "properties": {
+                  "business_id": { "type": "string", "example": "biz_vendor_001" },
+                  "business_type": { "type": "string", "enum": ["caterer", "tailor", "event_vendor"], "example": "event_vendor" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job created successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/jobs/{id}": {
+      "get": {
+        "summary": "Get Job Details",
+        "description": "Retrieves the full job object, state, messages, and extracted fields.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Job ID UUID"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Job details retrieved" },
+          "404": { "description": "Job not found" }
+        }
+      }
+    },
+    "/jobs/{id}/messages": {
+      "post": {
+        "summary": "Send Client Message",
+        "description": "Appends a new client message and triggers the agent reasoning loop (INGESTING -> REASONING -> CLARIFYING / AWAITING_HUMAN_APPROVAL / NEEDS_SME_INPUT).",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message_text", "received_at"],
+                "properties": {
+                  "message_text": { "type": "string", "example": "Good day, I need decor and lighting for a 150-guest wedding in Lekki on November 20th. My budget is around 2 million Naira." },
+                  "received_at": { "type": "string", "format": "date-time", "example": "2026-09-01T10:00:00.000Z" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Agent loop completed and returns updated job state" },
+          "409": { "description": "Invalid state transition" }
+        }
+      }
+    },
+    "/jobs/{id}/quote": {
+      "get": {
+        "summary": "Get Draft Quote",
+        "description": "Returns the generated draft quote (line items, contingencies, totals).",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Draft quote retrieved" },
+          "404": { "description": "Quote not available" }
+        }
+      },
+      "patch": {
+        "summary": "Edit Draft Quote",
+        "description": "Allows the SME owner to modify line item quantities, prices, or notes before approving.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "line_items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": { "type": "string" },
+                        "quantity": { "type": "number" },
+                        "unit_price": { "type": "number" },
+                        "total": { "type": "number" }
+                      }
+                    }
+                  },
+                  "notes": { "type": "string", "example": "Discount applied after SME phone call" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Quote updated successfully" },
+          "409": { "description": "State must be AWAITING_HUMAN_APPROVAL" }
+        }
+      }
+    },
+    "/jobs/{id}/approve_quote": {
+      "post": {
+        "summary": "Approve and Send Quote",
+        "description": "SME owner explicitly approves the quote. Sends quote to simulated chat and transitions state to EXECUTED.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["approved_by"],
+                "properties": {
+                  "approved_by": { "type": "string", "example": "sme_owner_david" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Quote approved and dispatched" },
+          "409": { "description": "Approval not allowed in current state" }
+        }
+      }
+    },
+    "/jobs/{id}/missing_fields": {
+      "get": {
+        "summary": "Get Missing Fields",
+        "description": "Retrieves missing required fields when job state is NEEDS_SME_INPUT.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Missing fields list and summary returned" }
+        }
+      }
+    },
+    "/jobs/{id}/manual_input": {
+      "post": {
+        "summary": "Submit Manual SME Input",
+        "description": "Allows SME to manually supply missing brief values and re-run agent reasoning.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["supplied_fields"],
+                "properties": {
+                  "supplied_fields": {
+                    "type": "object",
+                    "example": { "guest_count": 150, "event_date": "2026-11-20" }
+                  },
+                  "source": { "type": "string", "example": "SME obtained details directly via phone call" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Manual input merged and agent loop re-executed" }
+        }
+      }
+    },
+    "/jobs/{id}/retry": {
+      "post": {
+        "summary": "Retry Failed Job",
+        "description": "Retries execution from FAILED_RETRY state.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Retry started" }
+        }
+      }
+    }
+  }
+}

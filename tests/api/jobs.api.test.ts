@@ -1,12 +1,25 @@
 import request from "supertest";
 import { app } from "../../src/app";
-import { _clearAllJobs, getJob, updateJobState, mergeExtractedFields, updateMissingFields } from "../../src/state/JobStore";
+import { _clearAllJobs, getJob, updateJobState, updateMissingFields } from "../../src/state/JobStore";
 import { _clearAuditLog } from "../../src/state/auditLog";
+import { llmProvider } from "../../src/llm";
+
+jest.mock("../../src/llm", () => ({
+  llmProvider: { generateResponse: jest.fn() },
+}));
 
 describe("REST API Endpoint Handlers (BE-09, BE-10, BE-11)", () => {
   beforeEach(() => {
     _clearAllJobs();
     _clearAuditLog();
+    jest.clearAllMocks();
+
+    (llmProvider.generateResponse as jest.Mock).mockResolvedValue(
+      JSON.stringify({
+        extracted_fields: { event_type: "wedding" },
+        missing_required_fields: ["guest_count", "event_date"],
+      })
+    );
   });
 
   describe("POST /jobs", () => {

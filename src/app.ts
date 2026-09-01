@@ -8,6 +8,9 @@ import { jobsRouter } from "./api/jobs.routes";
 import { AppError } from "./utils/errors";
 import { logger } from "./utils/logger";
 
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./docs/swagger.json";
+
 export const app = express();
 
 app.use(express.json());
@@ -15,6 +18,12 @@ app.use(express.json());
 app.use((req: Request, _res: Response, next: NextFunction) => {
   logger.info(`HTTP ${req.method} ${req.url}`);
   next();
+});
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.get("/", (_req: Request, res: Response) => {
+  res.send("BillAm Agent is running");
 });
 
 app.get("/health", (_req: Request, res: Response) => {

@@ -1,0 +1,279 @@
+{
+	"info": {
+		"_postman_id": "billam-agent-api-v1",
+		"name": "BillAm Agent API",
+		"description": "Postman collection for E2E testing of the BillAm Agent REST API.\nIncludes auto-variable setting for {{job_id}} so you can run the requests in sequence by hitting Send.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "job_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "0. Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/health",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"health"
+					]
+				},
+				"description": "Verifies that the BillAm Agent server is running and healthy."
+			},
+			"response": []
+		},
+		{
+			"name": "1. Create Job",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 201) {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.data && jsonData.data.job_id) {",
+							"        pm.collectionVariables.set(\"job_id\", jsonData.data.job_id);",
+							"        console.log(\"Saved job_id:\", jsonData.data.job_id);",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/jobs",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs"
+					]
+				},
+				"description": "Creates a new job session and automatically populates the {{job_id}} variable for subsequent requests."
+			},
+			"response": []
+		},
+		{
+			"name": "2. Send Client Message (Initial Brief)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"message_text\": \"Hello, I am planning a wedding for about 150 guests on November 20th in Lekki. Our budget is around 2 million Naira.\",\n  \"received_at\": \"2026-09-01T10:00:00.000Z\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/jobs/{{job_id}}/messages",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs",
+						"{{job_id}}",
+						"messages"
+					]
+				},
+				"description": "Sends a client chat message and triggers the agent reasoning loop."
+			},
+			"response": []
+		},
+		{
+			"name": "3. Get Job Details & State",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/jobs/{{job_id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs",
+						"{{job_id}}"
+					]
+				},
+				"description": "Retrieves current job state, messages, extracted fields, and quote status."
+			},
+			"response": []
+		},
+		{
+			"name": "4. Get Generated Draft Quote",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/jobs/{{job_id}}/quote",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs",
+						"{{job_id}}",
+						"quote"
+					]
+				},
+				"description": "Retrieves the generated draft quote (line items, contingencies, totals)."
+			},
+			"response": []
+		},
+		{
+			"name": "5. SME Edit Draft Quote",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"line_items\": [\n    {\n      \"name\": \"Chairs & Tables Package\",\n      \"quantity\": 150,\n      \"unit_price\": 600,\n      \"total\": 90000\n    },\n    {\n      \"name\": \"Venue Decor Tiers\",\n      \"quantity\": 1,\n      \"unit_price\": 350000,\n      \"total\": 350000\n    }\n  ],\n  \"notes\": \"Applied 10% SME discount during direct consultation\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/jobs/{{job_id}}/quote",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs",
+						"{{job_id}}",
+						"quote"
+					]
+				},
+				"description": "Allows SME owner to adjust line items or totals before approval."
+			},
+			"response": []
+		},
+		{
+			"name": "6. Approve & Send Quote to Client",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"approved_by\": \"sme_owner_david\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/jobs/{{job_id}}/approve_quote",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs",
+						"{{job_id}}",
+						"approve_quote"
+					]
+				},
+				"description": "SME explicitly approves the draft quote. Dispatches message to client chat and transitions job to EXECUTED."
+			},
+			"response": []
+		},
+		{
+			"name": "7. Get Missing Fields (Recovery flow)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/jobs/{{job_id}}/missing_fields",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs",
+						"{{job_id}}",
+						"missing_fields"
+					]
+				},
+				"description": "Used when job is in NEEDS_SME_INPUT state to inspect unresolvable required fields."
+			},
+			"response": []
+		},
+		{
+			"name": "8. Submit Manual SME Input (Recovery flow)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"supplied_fields\": {\n    \"guest_count\": 150,\n    \"event_date\": \"2026-11-20\"\n  },\n  \"source\": \"SME obtained details directly via phone call\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/jobs/{{job_id}}/manual_input",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs",
+						"{{job_id}}",
+						"manual_input"
+					]
+				},
+				"description": "SME supplies missing required values to resume agent reasoning."
+			},
+			"response": []
+		},
+		{
+			"name": "9. Retry Failed Job",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/jobs/{{job_id}}/retry",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs",
+						"{{job_id}}",
+						"retry"
+					]
+				},
+				"description": "Retries execution for a job in FAILED_RETRY state."
+			},
+			"response": []
+		}
+	]
+}

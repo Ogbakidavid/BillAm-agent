@@ -28,11 +28,7 @@ import {
 import { simulateSendMessageTool } from "../agent/tools/simulateSendMessage";
 import type { ChatMessage, LineItem } from "../types/Job";
 
-// Placeholder — wired in when integration engineer delivers the agentLoop
-async function runAgentLoop(jobId: string) {
-  // agentLoop(jobId) will be imported and called here
-  return getJob(jobId);
-}
+import { runAgentLoop } from "../agent/orchestration/agentLoop";
 
 /**
  * POST /jobs
