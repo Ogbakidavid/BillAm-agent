@@ -65,8 +65,24 @@ export const computeQuoteTool = tool({
       });
 
       const fullPrompt = `${QUOTE_DRAFT_SYSTEM_PROMPT}\n\n${userPrompt}`;
-      const rawResponse = await llmProvider.generateResponse(fullPrompt);
+            const rawResponse = await llmProvider.generateResponse(fullPrompt);
       const parsed = extractJson(rawResponse);
+
+      // Claude can itself flag a request as infeasible (e.g. unrealistic
+      // budget vs scope) and report status: FAILED_RETRY with no quote.
+      // We must honour that instead of blindly returning SUCCESS just
+      // because the JSON itself parsed correctly.
+      if (parsed.status === "FAILED_RETRY" || parsed.quote === null) {
+        return {
+          job_id: input.job_id,
+          line_items: [],
+          contingencies: [],
+          total_amount: 0,
+          validity_period_days: 7,
+          status: "FAILED_RETRY",
+          error: parsed.error || "Quote could not be generated — request may be infeasible.",
+        };
+      }
 
       const quoteData = parsed.quote || parsed;
 
