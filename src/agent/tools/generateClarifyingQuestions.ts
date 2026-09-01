@@ -32,12 +32,10 @@ const generateClarifyingQuestionsInputSchema = z.object({
     ),
 });
 
-function extractQuestions(text: string): string[] {
-  const lines = text
-    .split("\n")
-    .map((l) => l.replace(/^[\s\-\*\d\.]+/, "").trim())
-    .filter((l) => l.length > 0 && l.includes("?"));
-  return lines.slice(0, 5);
+function extractJson(text: string): any {
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("No JSON object found in LLM response");
+  return JSON.parse(match[0]);
 }
 
 /**
@@ -64,14 +62,11 @@ export const generateClarifyingQuestionsTool = tool({
 
       const fullPrompt = `${CLARIFICATION_SYSTEM_PROMPT}\n\n${userPrompt}`;
       const rawResponse = await llmProvider.generateResponse(fullPrompt);
-
-      const questions = extractQuestions(rawResponse);
-      const draft_message_to_client = questions.join("\n");
-
+      const parsed = extractJson(rawResponse);
       return {
         job_id: input.job_id,
-        questions,
-        draft_message_to_client,
+        questions: parsed.questions || [],
+        draft_message_to_client: parsed.draft_message_to_client || "",
         status: "SUCCESS",
         error: null,
       };
