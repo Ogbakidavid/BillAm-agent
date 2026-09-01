@@ -80,12 +80,20 @@ export const computeQuoteTool = tool({
         amount: c.amount ?? 0,
       }));
 
+      // Claude isn't always consistent about the exact field name for the
+      // total across responses — accept a few reasonable variants rather
+      // than assuming one exact key every time.
+      const totalAmount =
+        quoteData.total_amount ?? quoteData.total ?? quoteData.grand_total ?? 0;
+      const validityDays =
+        quoteData.validity_period_days ?? quoteData.validity_days ?? 7;
+
       return {
         job_id: input.job_id,
         line_items: lineItems,
         contingencies: contingencies,
-        total_amount: quoteData.total_amount || 0,
-        validity_period_days: quoteData.validity_period_days || 7,
+        total_amount: totalAmount,
+        validity_period_days: validityDays,
         status: "SUCCESS",
         error: null,
       };
