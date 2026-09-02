@@ -12,7 +12,18 @@ describe("generateClarifyingQuestionsTool", () => {
 
   it("extracts questions from LLM response and returns them for round 1", async () => {
     (llmProvider.generateResponse as jest.Mock).mockResolvedValue(
-      "1. What is the event date?\n2. Where will the event be held?\n3. How many guests are expected?"
+      JSON.stringify({
+        job_id: "job-789",
+        questions: [
+          "What is the event date?",
+          "Where will the event be held?",
+          "How many guests are expected?",
+        ],
+        draft_message_to_client:
+          "Hello! Quick questions: 1. What is the event date? 2. Where will the event be held? 3. How many guests are expected?",
+        status: "SUCCESS",
+        error: null,
+      }),
     );
 
     const input = {
@@ -34,7 +45,13 @@ describe("generateClarifyingQuestionsTool", () => {
 
   it("accepts valid round 2 input and returns SUCCESS", async () => {
     (llmProvider.generateResponse as jest.Mock).mockResolvedValue(
-      "1. What is your budget range?"
+      JSON.stringify({
+        job_id: "job-789",
+        questions: ["What is your budget range?"],
+        draft_message_to_client: "Hello! What is your budget range?",
+        status: "SUCCESS",
+        error: null,
+      }),
     );
 
     const input = {
@@ -52,7 +69,7 @@ describe("generateClarifyingQuestionsTool", () => {
 
   it("returns FAILED_RETRY when the LLM provider fails", async () => {
     (llmProvider.generateResponse as jest.Mock).mockRejectedValue(
-      new Error("all providers failed")
+      new Error("all providers failed"),
     );
 
     const input = {
@@ -72,12 +89,26 @@ describe("generateClarifyingQuestionsTool", () => {
 
   it("caps questions at 5 even if LLM returns more", async () => {
     (llmProvider.generateResponse as jest.Mock).mockResolvedValue(
-      "1. Q1?\n2. Q2?\n3. Q3?\n4. Q4?\n5. Q5?\n6. Q6?\n7. Q7?"
+      JSON.stringify({
+        job_id: "job-789",
+        questions: ["Q1?", "Q2?", "Q3?", "Q4?", "Q5?", "Q6?", "Q7?"],
+        draft_message_to_client: "Q1? Q2? Q3? Q4? Q5? Q6? Q7?",
+        status: "SUCCESS",
+        error: null,
+      }),
     );
 
     const input = {
       job_id: "job-789",
-      missing_required_fields: ["event_date", "venue_location", "guest_count", "budget_range", "event_type", "catering_included", "lighting"],
+      missing_required_fields: [
+        "event_date",
+        "venue_location",
+        "guest_count",
+        "budget_range",
+        "event_type",
+        "catering_included",
+        "lighting",
+      ],
       business_type: "event_vendor" as const,
       clarification_round: 1,
     };
@@ -95,7 +126,9 @@ describe("generateClarifyingQuestionsTool", () => {
       clarification_round: 3,
     };
 
-    await expect(generateClarifyingQuestionsTool.invoke(input)).rejects.toThrow();
+    await expect(
+      generateClarifyingQuestionsTool.invoke(input),
+    ).rejects.toThrow();
   });
 
   it("fails validation if missing_required_fields is empty", async () => {
@@ -106,7 +139,9 @@ describe("generateClarifyingQuestionsTool", () => {
       clarification_round: 1,
     };
 
-    await expect(generateClarifyingQuestionsTool.invoke(input)).rejects.toThrow();
+    await expect(
+      generateClarifyingQuestionsTool.invoke(input),
+    ).rejects.toThrow();
   });
 
   it("fails validation if job_id is empty", async () => {
@@ -117,6 +152,8 @@ describe("generateClarifyingQuestionsTool", () => {
       clarification_round: 1,
     };
 
-    await expect(generateClarifyingQuestionsTool.invoke(input)).rejects.toThrow();
+    await expect(
+      generateClarifyingQuestionsTool.invoke(input),
+    ).rejects.toThrow();
   });
 });

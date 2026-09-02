@@ -96,6 +96,19 @@ async function handleClarification(job: Job, round: number): Promise<Job> {
     required_approval: false,
   });
 
+  // simulateSendMessageTool is still a stub and doesn't persist to the
+  // transcript itself — append it here, same pattern jobs.handlers.ts
+  // uses for the quote-approval path.
+  JobStore.appendMessage(job.job_id, {
+    message_id: `msg-${Date.now()}`,
+    job_id: job.job_id,
+    sender: "agent",
+    message_type: "CLARIFICATION",
+    text: clarifyResult.draft_message_to_client,
+    required_approval: false,
+    created_at: new Date(),
+  });
+
   AuditLog.logClarificationSent(job.job_id, clarifyResult.questions, round);
   job.clarification_round = round;
 

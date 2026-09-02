@@ -65,18 +65,54 @@ export const computeQuoteTool = tool({
       });
 
       const fullPrompt = `${QUOTE_DRAFT_SYSTEM_PROMPT}\n\n${userPrompt}`;
-      const rawResponse = await llmProvider.generateResponse(fullPrompt);
+            const rawResponse = await llmProvider.generateResponse(fullPrompt);
       const parsed = extractJson(rawResponse);
+
+      // Claude can itself flag a request as infeasible (e.g. unrealistic
+      // budget vs scope) and report status: FAILED_RETRY with no quote.
+      // We must honour that instead of blindly returning SUCCESS just
+      // because the JSON itself parsed correctly.
+      if (parsed.status === "FAILED_RETRY" || parsed.quote === null) {
+        return {
+          job_id: input.job_id,
+          line_items: [],
+          contingencies: [],
+          total_amount: 0,
+          validity_period_days: 7,
+          status: "FAILED_RETRY",
+          error: parsed.error || "Quote could not be generated — request may be infeasible.",
+        };
+      }
+
+      const quoteData = parsed.quote || parsed;
+
+      const lineItems = (quoteData.line_items || []).map((item: any) => ({
+        label: item.label,
+        amount: item.subtotal ?? item.amount ?? 0,
+      }));
+
+      const contingencies = (quoteData.contingencies || []).map((c: any) => ({
+        label: c.label,
+        amount: c.amount ?? 0,
+      }));
+
+      // Claude isn't always consistent about the exact field name for the
+      // total across responses — accept a few reasonable variants rather
+      // than assuming one exact key every time.
+      const totalAmount =
+        quoteData.total_amount ?? quoteData.total ?? quoteData.grand_total ?? 0;
+      const validityDays =
+        quoteData.validity_period_days ?? quoteData.validity_days ?? 7;
 
       return {
         job_id: input.job_id,
-        line_items: parsed.line_items || [],
-        contingencies: parsed.contingencies || [],
-        total_amount: parsed.total_amount || 0,
-        validity_period_days: parsed.validity_period_days || 7,
+        line_items: lineItems,
+        contingencies: contingencies,
+        total_amount: totalAmount,
+        validity_period_days: validityDays,
         status: "SUCCESS",
         error: null,
-      }
+      };
     } catch (err) {
       return {
         job_id: input.job_id,
