@@ -7,11 +7,14 @@ import express, { Request, Response, NextFunction } from "express";
 import { jobsRouter } from "./api/jobs.routes";
 import { AppError } from "./utils/errors";
 import { logger } from "./utils/logger";
+import cors from "cors";
 
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./docs/swagger.json";
 
 export const app = express();
+
+app.use(cors());
 
 app.use(express.json());
 
@@ -27,7 +30,7 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 app.get("/health", (_req: Request, res: Response) => {
-  res.json({ 
+  res.json({
     status: "SUCCESS",
     data: {
       status: "healthy",
@@ -59,7 +62,7 @@ app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
     });
   }
 
-  logger.error(`Unhandled error: ${err.message}`, { stack: err.stack});
+  logger.error(`Unhandled error: ${err.message}`, { stack: err.stack });
   return res.status(500).json({
     status: "FAILED_RETRY",
     errorCode: "INTERNAL_SERVER_ERROR",
