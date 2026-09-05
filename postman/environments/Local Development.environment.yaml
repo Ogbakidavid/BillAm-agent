@@ -1,0 +1,6 @@
+name: Local Development
+values:
+  - key: baseUrl
+    value: 'http://localhost:3001'
+  - key: job_id
+    value: ''

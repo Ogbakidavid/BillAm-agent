@@ -39,7 +39,7 @@ The approval gate is enforced by the backend and state machine.
 Development:
 
 ```text
-http://localhost:3000
+http://localhost:3001
 ```
 
 API paths:

@@ -419,7 +419,7 @@ Can work in parallel on:
 `.env.example` should document at least:
 
 ```env
-PORT=3000
+PORT=3001
 NODE_ENV=development
 
 # LLM provider selection

@@ -243,7 +243,7 @@ npx tsc --noEmit
 Once running, the health check endpoint is available at:
 
 ```
-GET http://localhost:3000/health
+GET http://localhost:3001/health
 ```
 
 ---
