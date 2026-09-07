@@ -65,7 +65,7 @@ export const computeQuoteTool = tool({
       });
 
       const fullPrompt = `${QUOTE_DRAFT_SYSTEM_PROMPT}\n\n${userPrompt}`;
-            const rawResponse = await llmProvider.generateResponse(fullPrompt);
+      const rawResponse = await llmProvider.generateResponse(fullPrompt);
       const parsed = extractJson(rawResponse);
 
       // Claude can itself flag a request as infeasible (e.g. unrealistic
@@ -80,7 +80,9 @@ export const computeQuoteTool = tool({
           total_amount: 0,
           validity_period_days: 7,
           status: "FAILED_RETRY",
-          error: parsed.error || "Quote could not be generated — request may be infeasible.",
+          error:
+            parsed.error ||
+            "Quote could not be generated — request may be infeasible.",
         };
       }
 
@@ -110,6 +112,10 @@ export const computeQuoteTool = tool({
         contingencies: contingencies,
         total_amount: totalAmount,
         validity_period_days: validityDays,
+        draft_message_to_client:
+          parsed.draft_message_to_client ||
+          quoteData.draft_message_to_client ||
+          "",
         status: "SUCCESS",
         error: null,
       };
