@@ -8,6 +8,7 @@ import { randomUUID } from "crypto";
 import {
   createJob,
   getJob,
+  getAllJobs,
   appendMessage,
   updateJobState,
   mergeExtractedFields,
@@ -68,7 +69,10 @@ export async function createJobHandler(
  * POST /jobs/:id/messages
  */
 
-export async function postMessageHandler(req: Request, res: Response): Promise<void> {
+export async function postMessageHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const job = getJob(req.params.id as string);
   if (!job) {
     res.status(404).json({
@@ -114,14 +118,17 @@ export async function postMessageHandler(req: Request, res: Response): Promise<v
   updateJobState(job.job_id, "INGESTING");
   logStateTransition(job.job_id, job.state, "INGESTING");
   // 3. Invoke the agent loop (stub — wires in when agentLoop is delivered)
-  const updatedJob = await runAgentLoop(job.job_id );
+  const updatedJob = await runAgentLoop(job.job_id);
   res.status(200).json({ success: true, data: updatedJob });
 }
 
 /**
- * GET /jobs/:id 
+ * GET /jobs/:id
  */
-export async function getJobHandler(req: Request, res: Response): Promise<void> {
+export async function getJobHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const job = getJob(req.params.id as string);
   if (!job) {
     res.status(404).json({
@@ -134,9 +141,23 @@ export async function getJobHandler(req: Request, res: Response): Promise<void> 
 }
 
 /**
- * GET /jobs/:id/quote 
+ * GET /jobs
  */
-export async function getQuoteHandler(req: Request, res: Response): Promise<void> {
+export async function listJobsHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const jobs = getAllJobs();
+  res.status(200).json({ success: true, data: jobs });
+}
+
+/**
+ * GET /jobs/:id/quote
+ */
+export async function getQuoteHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const job = getJob(req.params.id as string);
   if (!job) {
     res.status(404).json({
@@ -148,7 +169,10 @@ export async function getQuoteHandler(req: Request, res: Response): Promise<void
   if (!job.quote) {
     res.status(404).json({
       success: false,
-      error: { code: "QUOTE_NOT_AVAILABLE", message: "No quote has been generated for this job yet" },
+      error: {
+        code: "QUOTE_NOT_AVAILABLE",
+        message: "No quote has been generated for this job yet",
+      },
     });
     return;
   }
@@ -156,9 +180,12 @@ export async function getQuoteHandler(req: Request, res: Response): Promise<void
 }
 
 /**
- * PATCH /jobs/:id/quote 
+ * PATCH /jobs/:id/quote
  */
-export async function editQuoteHandler(req: Request, res: Response): Promise<void> {
+export async function editQuoteHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const job = getJob(req.params.id as string);
   if (!job) {
     res.status(404).json({
@@ -172,7 +199,8 @@ export async function editQuoteHandler(req: Request, res: Response): Promise<voi
       success: false,
       error: {
         code: "INVALID_STATE_TRANSITION",
-        message: "Quote can only be edited while in AWAITING_HUMAN_APPROVAL state",
+        message:
+          "Quote can only be edited while in AWAITING_HUMAN_APPROVAL state",
       },
     });
     return;
@@ -202,8 +230,14 @@ export async function editQuoteHandler(req: Request, res: Response): Promise<voi
       total: item.total ?? (item.quantity ?? 1) * (item.unit_price ?? 0),
     })) as LineItem[];
     // Recalculate totals
-    const subtotal = job.quote.line_items.reduce((sum, item) => sum + item.total, 0);
-    const contingencyTotal = job.quote.contingencies.reduce((sum, c) => sum + c.amount, 0);
+    const subtotal = job.quote.line_items.reduce(
+      (sum, item) => sum + item.total,
+      0,
+    );
+    const contingencyTotal = job.quote.contingencies.reduce(
+      (sum, c) => sum + c.amount,
+      0,
+    );
     job.quote.subtotal = subtotal;
     job.quote.total = subtotal + contingencyTotal;
   }
@@ -220,9 +254,12 @@ export async function editQuoteHandler(req: Request, res: Response): Promise<voi
 }
 
 /**
- * POST /jobs/:id/approve_quote 
+ * POST /jobs/:id/approve_quote
  */
-export async function approveQuoteHandler(req: Request, res: Response): Promise<void> {
+export async function approveQuoteHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const job = getJob(req.params.id as string);
   if (!job) {
     res.status(404).json({
@@ -294,9 +331,12 @@ export async function approveQuoteHandler(req: Request, res: Response): Promise<
 }
 
 /**
- * GET /jobs/:id/missing_fields 
+ * GET /jobs/:id/missing_fields
  */
-export async function getMissingFieldsHandler(req: Request, res: Response): Promise<void> {
+export async function getMissingFieldsHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const job = getJob(req.params.id as string);
   if (!job) {
     res.status(404).json({
@@ -321,16 +361,21 @@ export async function getMissingFieldsHandler(req: Request, res: Response): Prom
       job_id: job.job_id,
       state: job.state,
       missing_fields: job.missing_required_fields,
-      summary: job.error_message ?? "Some required fields could not be resolved after two clarification rounds.",
+      summary:
+        job.error_message ??
+        "Some required fields could not be resolved after two clarification rounds.",
       clarification_round: job.clarification_round,
     },
   });
 }
 
 /**
- * POST /jobs/:id/manual_input 
+ * POST /jobs/:id/manual_input
  */
-export async function manualInputHandler(req: Request, res: Response): Promise<void> {
+export async function manualInputHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const job = getJob(req.params.id as string);
   if (!job) {
     res.status(404).json({
@@ -369,9 +414,12 @@ export async function manualInputHandler(req: Request, res: Response): Promise<v
 }
 
 /**
- * POST /jobs/:id/retry 
+ * POST /jobs/:id/retry
  */
-export async function retryJobHandler(req: Request, res: Response): Promise<void> {
+export async function retryJobHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const job = getJob(req.params.id as string);
   if (!job) {
     res.status(404).json({

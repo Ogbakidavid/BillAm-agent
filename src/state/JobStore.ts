@@ -73,6 +73,10 @@ export function updateMissingFields(jobId: string, missing: string[]): Job | und
   return job;
 }
 
+export function getAllJobs(): Job[] {
+  return Array.from(jobs.values());
+}
+
 export function _clearAllJobs(): void {
   jobs.clear();
 }
