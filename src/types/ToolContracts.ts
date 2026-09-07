@@ -71,6 +71,7 @@ export interface ComputeQuoteOutput {
   }>;
   total_amount: number;
   validity_period_days: number;
+  draft_message_to_client?: string;
   status: "SUCCESS" | "FAILED_RETRY";
   error: string | null;
 }

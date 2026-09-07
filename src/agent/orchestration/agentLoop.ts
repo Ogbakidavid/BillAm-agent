@@ -148,6 +148,7 @@ async function handleComputeQuote(job: Job): Promise<Job> {
     validity_days: quoteResult.validity_period_days,
     payment_terms: "",
     assumptions: [],
+    draft_message: quoteResult.draft_message_to_client,
   };
 
   moveState(job, "AWAITING_HUMAN_APPROVAL");
