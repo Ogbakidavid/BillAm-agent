@@ -8,6 +8,7 @@ import {
   createJobHandler,
   postMessageHandler,
   getJobHandler,
+  listJobsHandler,
   getQuoteHandler,
   editQuoteHandler,
   approveQuoteHandler,
@@ -36,3 +37,5 @@ jobsRouter.get("/:id/missing_fields", getMissingFieldsHandler);
 jobsRouter.post("/:id/manual_input", manualInputHandler);
 // POST   /jobs/:id/retry — Retry a FAILED_RETRY job
 jobsRouter.post("/:id/retry", retryJobHandler);
+// GET    /jobs — List all jobs (for dashboard/overview/list pages)
+jobsRouter.get("/", listJobsHandler);
