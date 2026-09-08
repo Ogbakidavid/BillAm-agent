@@ -1,6 +1,7 @@
 // Selects the active provider based on environment configuration
 
 import { LLMClient, LLMProviderError } from "./LLMClient";
+import { BedrockConfigError } from "./BedrockLLMClient";
 
 interface ProviderEntry {
   name: string;
@@ -14,7 +15,11 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function callWithRetry(entry: ProviderEntry, prompt: string): Promise<string> {
+async function callWithRetry(
+  entry: ProviderEntry,
+  prompt: string,
+  isRecoverable?: (err: unknown) => boolean
+): Promise<string> {
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -22,6 +27,11 @@ async function callWithRetry(entry: ProviderEntry, prompt: string): Promise<stri
       return await entry.client.generateResponse(prompt);
     } catch (err) {
       lastError = err;
+
+      if (err instanceof BedrockConfigError || (isRecoverable && !isRecoverable(err))) {
+        throw err;
+      }
+
       if (attempt < MAX_RETRIES) {
         await delay(RETRY_DELAY_MS * (attempt + 1));
       }
@@ -50,7 +60,7 @@ export class ProviderFactory {
 
     for (const entry of this.providers) {
       try {
-        return await callWithRetry(entry, prompt);
+        return await callWithRetry(entry, prompt, (err) => !(err instanceof BedrockConfigError));
       } catch (err) {
         failures.push(`${entry.name}: ${err instanceof Error ? err.message : err}`);
       }
