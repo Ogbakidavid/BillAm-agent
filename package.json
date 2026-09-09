@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.120.0",
+    "@anthropic-ai/sdk": "^0.124.0",
     "@aws-sdk/client-bedrock-agentcore": "^3.1116.0",
     "@aws-sdk/client-bedrock-runtime": "^3.1116.0",
     "@strands-agents/sdk": "^1.14.0",

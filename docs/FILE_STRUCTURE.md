@@ -124,66 +124,66 @@ billam-agent/
 
 ### Application entry
 
-| File | Responsibility |
-|---|---|
-| `src/index.ts` | Starts the server and loads configuration |
-| `src/app.ts` | Express application setup, middleware and route registration |
+| File           | Responsibility                                               |
+| -------------- | ------------------------------------------------------------ |
+| `src/index.ts` | Starts the server and loads configuration                    |
+| `src/app.ts`   | Express application setup, middleware and route registration |
 
 ### Agent orchestration
 
-| File | Responsibility |
-|---|---|
-| `src/agent/orchestration/agentLoop.ts` | Coordinates ingestion, parsing, clarification, quote computation and state transitions |
-| `src/agent/tools/ingestChatMessage.ts` | Receives and records each client message |
-| `src/agent/tools/parseClientBrief.ts` | Extracts structured brief fields using the knowledge base |
-| `src/agent/tools/generateClarifyingQuestions.ts` | Generates targeted questions for genuinely missing required fields |
-| `src/agent/tools/computeQuote.ts` | Uses the price catalog to generate line items, contingencies, totals and quote terms |
-| `src/agent/tools/simulateSendMessage.ts` | Appends autonomous clarifications or approved quotes to the simulated chat and audit log |
+| File                                             | Responsibility                                                                           |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `src/agent/orchestration/agentLoop.ts`           | Coordinates ingestion, parsing, clarification, quote computation and state transitions   |
+| `src/agent/tools/ingestChatMessage.ts`           | Receives and records each client message                                                 |
+| `src/agent/tools/parseClientBrief.ts`            | Extracts structured brief fields using the knowledge base                                |
+| `src/agent/tools/generateClarifyingQuestions.ts` | Generates targeted questions for genuinely missing required fields                       |
+| `src/agent/tools/computeQuote.ts`                | Uses the price catalog to generate line items, contingencies, totals and quote terms     |
+| `src/agent/tools/simulateSendMessage.ts`         | Appends autonomous clarifications or approved quotes to the simulated chat and audit log |
 
 ### Prompt definitions
 
-| File | Responsibility |
-|---|---|
-| `systemPrompt.ts` | Defines agent role and hard behavioral boundaries |
-| `parseBriefPrompt.ts` | Structured extraction instructions |
-| `clarificationPrompt.ts` | Clarifying-question generation instructions |
-| `quoteDraftPrompt.ts` | Quote drafting instructions |
+| File                     | Responsibility                                    |
+| ------------------------ | ------------------------------------------------- |
+| `systemPrompt.ts`        | Defines agent role and hard behavioral boundaries |
+| `parseBriefPrompt.ts`    | Structured extraction instructions                |
+| `clarificationPrompt.ts` | Clarifying-question generation instructions       |
+| `quoteDraftPrompt.ts`    | Quote drafting instructions                       |
 
 The prompts must not be the only protection for approval or state transitions. Those invariants belong in backend/state logic.
 
 ### API
 
-| File | Responsibility |
-|---|---|
-| `src/api/jobs.routes.ts` | Declares the job-oriented REST routes |
+| File                       | Responsibility                                     |
+| -------------------------- | -------------------------------------------------- |
+| `src/api/jobs.routes.ts`   | Declares the job-oriented REST routes              |
 | `src/api/jobs.handlers.ts` | Handles requests and invokes the agent/state layer |
-| `src/api/validators.ts` | Validates request bodies and route inputs |
+| `src/api/validators.ts`    | Validates request bodies and route inputs          |
 
 ### State and persistence
 
-| File | Responsibility |
-|---|---|
-| `src/state/JobStore.ts` | Stores and retrieves active jobs |
-| `src/state/stateMachine.ts` | Enforces valid job-state transitions |
-| `src/state/auditLog.ts` | Records state changes, tool calls, sends, edits, approvals, errors and retries |
+| File                        | Responsibility                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| `src/state/JobStore.ts`     | Stores and retrieves active jobs                                               |
+| `src/state/stateMachine.ts` | Enforces valid job-state transitions                                           |
+| `src/state/auditLog.ts`     | Records state changes, tool calls, sends, edits, approvals, errors and retries |
 
 ### Types
 
-| File | Responsibility |
-|---|---|
-| `src/types/Job.ts` | Job and job-state definitions |
-| `src/types/Quote.ts` | Quote, line item and contingency definitions |
-| `src/types/ChatMessage.ts` | Simulated chat message structure |
-| `src/types/ToolContracts.ts` | Input/output contracts for tools |
-| `src/types/Api.ts` | API request and response types |
+| File                         | Responsibility                               |
+| ---------------------------- | -------------------------------------------- |
+| `src/types/Job.ts`           | Job and job-state definitions                |
+| `src/types/Quote.ts`         | Quote, line item and contingency definitions |
+| `src/types/ChatMessage.ts`   | Simulated chat message structure             |
+| `src/types/ToolContracts.ts` | Input/output contracts for tools             |
+| `src/types/Api.ts`           | API request and response types               |
 
 ### Validation and utilities
 
-| File | Responsibility |
-|---|---|
-| `src/config/env.ts` | Reads and validates environment configuration |
-| `src/utils/errors.ts` | Shared application error definitions |
-| `src/utils/logger.ts` | Shared logging utilities |
+| File                  | Responsibility                                |
+| --------------------- | --------------------------------------------- |
+| `src/config/env.ts`   | Reads and validates environment configuration |
+| `src/utils/errors.ts` | Shared application error definitions          |
+| `src/utils/logger.ts` | Shared logging utilities                      |
 
 ### Tests
 
@@ -205,12 +205,12 @@ The Cloud Integrator should own the deployment and model-provider infrastructure
 
 ## LLM provider integration
 
-| File | Responsibility |
-|---|---|
-| `src/llm/LLMClient.ts` | Shared provider interface |
-| `src/llm/BedrockLLMClient.ts` | Amazon Bedrock implementation |
-| `src/llm/AnthropicLLMClient.ts` | Direct Anthropic API fallback |
-| `src/llm/providerFactory.ts` | Selects the active provider based on environment configuration |
+| File                            | Responsibility                                                 |
+| ------------------------------- | -------------------------------------------------------------- |
+| `src/llm/LLMClient.ts`          | Shared provider interface                                      |
+| `src/llm/BedrockLLMClient.ts`   | Amazon Bedrock implementation                                  |
+| `src/llm/AnthropicLLMClient.ts` | Direct Anthropic API fallback                                  |
+| `src/llm/providerFactory.ts`    | Selects the active provider based on environment configuration |
 
 The intended provider order is:
 
@@ -228,9 +228,9 @@ The Backend Engineer should only depend on `LLMClient`, not on a specific provid
 
 ## Infrastructure
 
-| Location | Responsibility |
-|---|---|
-| `infrastructure/README.md` | Documents required cloud resources and deployment assumptions |
+| Location                              | Responsibility                                                        |
+| ------------------------------------- | --------------------------------------------------------------------- |
+| `infrastructure/README.md`            | Documents required cloud resources and deployment assumptions         |
 | `infrastructure/deployment/README.md` | Deployment procedure, environment variables and runtime configuration |
 
 The exact AWS deployment files should only be added after the Cloud Integrator decides the final deployment mechanism. The current source documents establish AWS/Bedrock integration and deployment responsibilities, but do not require a specific IaC format.

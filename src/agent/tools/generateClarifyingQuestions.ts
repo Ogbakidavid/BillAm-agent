@@ -21,7 +21,7 @@ const generateClarifyingQuestionsInputSchema = z.object({
   missing_required_fields: z
     .array(z.string())
     .min(1, "At least one missing field is required"),
-  business_type: z.enum(["caterer", "tailor", "event_vendor"]),
+  business_type: z.enum(["event_vendor", "caterer", "tailor", "photographer", "event_planner", "equipment_rental"]),
   clarification_round: z
     .number()
     .int()

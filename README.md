@@ -23,33 +23,33 @@ BillAm Agent receives unstructured client briefs via a simulated WhatsApp-style 
 
 ## Overview
 
-| Feature | Detail |
-|---|---|
-| **Primary Business Type** | Event Vendor (MVP) |
-| **Interface** | Simulated real-time dashboard chat |
-| **Agent Framework** | [Strands Agents SDK](https://github.com/strands-agents/sdk) |
-| **Primary LLM Provider** | Amazon Bedrock (Claude via AWS) |
-| **Fallback LLM Provider** | Anthropic API (direct) |
-| **Backend** | Node.js 18+ · TypeScript · Express |
-| **Currency** | Nigerian Naira (NGN / ₦) |
-| **Clarification Cap** | Max 2 autonomous rounds per job |
-| **Quote Approval Gate** | Mandatory single SME owner approval before any quote is sent |
+| Feature                   | Detail                                                       |
+| ------------------------- | ------------------------------------------------------------ |
+| **Primary Business Type** | Event Vendor (MVP)                                           |
+| **Interface**             | Simulated real-time dashboard chat                           |
+| **Agent Framework**       | [Strands Agents SDK](https://github.com/strands-agents/sdk)  |
+| **Primary LLM Provider**  | Amazon Bedrock (Claude via AWS)                              |
+| **Fallback LLM Provider** | Anthropic API (direct)                                       |
+| **Backend**               | Node.js 18+ · TypeScript · Express                           |
+| **Currency**              | Nigerian Naira (NGN / ₦)                                     |
+| **Clarification Cap**     | Max 2 autonomous rounds per job                              |
+| **Quote Approval Gate**   | Mandatory single SME owner approval before any quote is sent |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js 18+ |
-| Language | TypeScript 5 |
-| Web Framework | Express 5 |
-| Agent Orchestration | `@strands-agents/sdk` |
-| Primary LLM | Amazon Bedrock (`@aws-sdk/client-bedrock-runtime`) |
-| Fallback LLM | Anthropic SDK (`@anthropic-ai/sdk`) |
-| Environment Config | `dotenv` |
-| Testing | Jest + `ts-jest` + Supertest |
-| Package Manager | pnpm |
+| Layer               | Technology                                         |
+| ------------------- | -------------------------------------------------- |
+| Runtime             | Node.js 18+                                        |
+| Language            | TypeScript 5                                       |
+| Web Framework       | Express 5                                          |
+| Agent Orchestration | `@strands-agents/sdk`                              |
+| Primary LLM         | Amazon Bedrock (`@aws-sdk/client-bedrock-runtime`) |
+| Fallback LLM        | Anthropic SDK (`@anthropic-ai/sdk`)                |
+| Environment Config  | `dotenv`                                           |
+| Testing             | Jest + `ts-jest` + Supertest                       |
+| Package Manager     | pnpm                                               |
 
 ---
 
@@ -205,21 +205,22 @@ Then edit `.env` with your values (see [Environment Variables](#environment-vari
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `PORT` | No (default: `3000`) | Port the Express server listens on |
-| `NODE_ENV` | No (default: `development`) | Runtime environment (`development` / `production`) |
-| `LOG_LEVEL` | No (default: `info`) | Log verbosity (`debug` / `info` / `warn` / `error`) |
-| `LLM_PROVIDER` | Yes | Active LLM provider: `bedrock` or `anthropic` |
-| `ANTHROPIC_API_KEY` | Yes (if provider = `anthropic`) | Anthropic API key for direct Claude access |
-| `AWS_REGION` | Yes (if provider = `bedrock`) | AWS region where Bedrock is enabled (e.g. `us-east-1`) |
-| `AWS_ACCESS_KEY_ID` | Yes (if provider = `bedrock`) | AWS access key |
-| `AWS_SECRET_ACCESS_KEY` | Yes (if provider = `bedrock`) | AWS secret access key |
-| `STRANDS_API_KEY` | If required by Strands SDK | Strands Agents SDK key if applicable |
+| Variable                | Required                        | Description                                            |
+| ----------------------- | ------------------------------- | ------------------------------------------------------ |
+| `PORT`                  | No (default: `3000`)            | Port the Express server listens on                     |
+| `NODE_ENV`              | No (default: `development`)     | Runtime environment (`development` / `production`)     |
+| `LOG_LEVEL`             | No (default: `info`)            | Log verbosity (`debug` / `info` / `warn` / `error`)    |
+| `LLM_PROVIDER`          | Yes                             | Active LLM provider: `bedrock` or `anthropic`          |
+| `ANTHROPIC_API_KEY`     | Yes (if provider = `anthropic`) | Anthropic API key for direct Claude access             |
+| `AWS_REGION`            | Yes (if provider = `bedrock`)   | AWS region where Bedrock is enabled (e.g. `us-east-1`) |
+| `AWS_ACCESS_KEY_ID`     | Yes (if provider = `bedrock`)   | AWS access key                                         |
+| `AWS_SECRET_ACCESS_KEY` | Yes (if provider = `bedrock`)   | AWS secret access key                                  |
+| `STRANDS_API_KEY`       | If required by Strands SDK      | Strands Agents SDK key if applicable                   |
 
 > ⚠️ Never commit your `.env` file. It is listed in `.gitignore`.
 
 **LLM Provider Fallback Order:**
+
 ```
 Amazon Bedrock (primary)
     │
@@ -266,17 +267,17 @@ Test files are located in `tests/`. Fixture data for mock scenarios is in `tests
 
 All technical documentation lives in the [`docs/`](./docs/) folder:
 
-| File | Description |
-|---|---|
-| [`ARCHITECTURE_REVISED.md`](./docs/ARCHITECTURE_REVISED.md) | System architecture and component diagram |
+| File                                                                                        | Description                                                             |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [`ARCHITECTURE_REVISED.md`](./docs/ARCHITECTURE_REVISED.md)                                 | System architecture and component diagram                               |
 | [`TECHNICAL_SPECIFICATION_CROSSCHECKED.md`](./docs/TECHNICAL_SPECIFICATION_CROSSCHECKED.md) | Full technical specification, tool contracts, state machine, API routes |
-| [`FILE_STRUCTURE.md`](./docs/FILE_STRUCTURE.md) | Repository map and file ownership (BE vs CI) |
-| [`API_SPECIFICATION.md`](./docs/API_SPECIFICATION.md) | REST API endpoints, request/response shapes |
-| [`DATA_SCHEMA.md`](./docs/DATA_SCHEMA.md) | TypeScript interfaces, JSON schemas, tool payload contracts |
-| [`TASK_BREAKDOWN.md`](./docs/TASK_BREAKDOWN.md) | 15-day sprint plan with role-specific task IDs and definitions of done |
-| [`TEST_PLAN.md`](./docs/TEST_PLAN.md) | Test suites, mock input scenarios, state invariant tests |
-| [`PROMPT_FILES_MAPPING.md`](./docs/PROMPT_FILES_MAPPING.md) | Role and key rules for each of the 5 LLM prompt files |
-| [`PROGRESS.md`](./docs/PROGRESS.md) | Live task completion status linked to TASK_BREAKDOWN.md |
+| [`FILE_STRUCTURE.md`](./docs/FILE_STRUCTURE.md)                                             | Repository map and file ownership (BE vs CI)                            |
+| [`API_SPECIFICATION.md`](./docs/API_SPECIFICATION.md)                                       | REST API endpoints, request/response shapes                             |
+| [`DATA_SCHEMA.md`](./docs/DATA_SCHEMA.md)                                                   | TypeScript interfaces, JSON schemas, tool payload contracts             |
+| [`TASK_BREAKDOWN.md`](./docs/TASK_BREAKDOWN.md)                                             | 15-day sprint plan with role-specific task IDs and definitions of done  |
+| [`TEST_PLAN.md`](./docs/TEST_PLAN.md)                                                       | Test suites, mock input scenarios, state invariant tests                |
+| [`PROMPT_FILES_MAPPING.md`](./docs/PROMPT_FILES_MAPPING.md)                                 | Role and key rules for each of the 5 LLM prompt files                   |
+| [`PROGRESS.md`](./docs/PROGRESS.md)                                                         | Live task completion status linked to TASK_BREAKDOWN.md                 |
 
 ---
 
@@ -297,6 +298,7 @@ These invariants are enforced by backend and state logic — **not by the LLM pr
 See [`docs/PROGRESS.md`](./docs/PROGRESS.md) for the full task-by-task completion status mapped to source files.
 
 **Current State (Base Code):**
+
 - ✅ All TypeScript type definitions, LLM prompts, runtime data files, app core, utilities, and documentation are complete.
 - 🔶 `agentLoop.ts`, prompt files, and partial infra config are in progress.
 - ❌ Tool implementations, state machine logic, API handlers, LLM provider logic, and test cases are pending — these are the active engineering tasks.

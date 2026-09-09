@@ -35,8 +35,15 @@
                 "type": "object",
                 "required": ["business_id", "business_type"],
                 "properties": {
-                  "business_id": { "type": "string", "example": "biz_vendor_001" },
-                  "business_type": { "type": "string", "enum": ["caterer", "tailor", "event_vendor"], "example": "event_vendor" }
+                  "business_id": {
+                    "type": "string",
+                    "example": "biz_vendor_001"
+                  },
+                  "business_type": {
+                    "type": "string",
+                    "enum": ["caterer", "tailor", "event_vendor"],
+                    "example": "event_vendor"
+                  }
                 }
               }
             }
@@ -76,7 +83,12 @@
         "summary": "Send Client Message",
         "description": "Appends a new client message and triggers the agent reasoning loop (INGESTING -> REASONING -> CLARIFYING / AWAITING_HUMAN_APPROVAL / NEEDS_SME_INPUT).",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -86,15 +98,24 @@
                 "type": "object",
                 "required": ["message_text", "received_at"],
                 "properties": {
-                  "message_text": { "type": "string", "example": "Good day, I need decor and lighting for a 150-guest wedding in Lekki on November 20th. My budget is around 2 million Naira." },
-                  "received_at": { "type": "string", "format": "date-time", "example": "2026-09-01T10:00:00.000Z" }
+                  "message_text": {
+                    "type": "string",
+                    "example": "Good day, I need decor and lighting for a 150-guest wedding in Lekki on November 20th. My budget is around 2 million Naira."
+                  },
+                  "received_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2026-09-01T10:00:00.000Z"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Agent loop completed and returns updated job state" },
+          "200": {
+            "description": "Agent loop completed and returns updated job state"
+          },
           "409": { "description": "Invalid state transition" }
         }
       }
@@ -104,7 +125,12 @@
         "summary": "Get Draft Quote",
         "description": "Returns the generated draft quote (line items, contingencies, totals).",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
         ],
         "responses": {
           "200": { "description": "Draft quote retrieved" },
@@ -115,7 +141,12 @@
         "summary": "Edit Draft Quote",
         "description": "Allows the SME owner to modify line item quantities, prices, or notes before approving.",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -136,7 +167,10 @@
                       }
                     }
                   },
-                  "notes": { "type": "string", "example": "Discount applied after SME phone call" }
+                  "notes": {
+                    "type": "string",
+                    "example": "Discount applied after SME phone call"
+                  }
                 }
               }
             }
@@ -153,7 +187,12 @@
         "summary": "Approve and Send Quote",
         "description": "SME owner explicitly approves the quote. Sends quote to simulated chat and transitions state to EXECUTED.",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -163,7 +202,10 @@
                 "type": "object",
                 "required": ["approved_by"],
                 "properties": {
-                  "approved_by": { "type": "string", "example": "sme_owner_david" }
+                  "approved_by": {
+                    "type": "string",
+                    "example": "sme_owner_david"
+                  }
                 }
               }
             }
@@ -180,7 +222,12 @@
         "summary": "Get Missing Fields",
         "description": "Retrieves missing required fields when job state is NEEDS_SME_INPUT.",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
         ],
         "responses": {
           "200": { "description": "Missing fields list and summary returned" }
@@ -192,7 +239,12 @@
         "summary": "Submit Manual SME Input",
         "description": "Allows SME to manually supply missing brief values and re-run agent reasoning.",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -204,16 +256,24 @@
                 "properties": {
                   "supplied_fields": {
                     "type": "object",
-                    "example": { "guest_count": 150, "event_date": "2026-11-20" }
+                    "example": {
+                      "guest_count": 150,
+                      "event_date": "2026-11-20"
+                    }
                   },
-                  "source": { "type": "string", "example": "SME obtained details directly via phone call" }
+                  "source": {
+                    "type": "string",
+                    "example": "SME obtained details directly via phone call"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Manual input merged and agent loop re-executed" }
+          "200": {
+            "description": "Manual input merged and agent loop re-executed"
+          }
         }
       }
     },
@@ -222,7 +282,12 @@
         "summary": "Retry Failed Job",
         "description": "Retries execution from FAILED_RETRY state.",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
         ],
         "responses": {
           "200": { "description": "Retry started" }

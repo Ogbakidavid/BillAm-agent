@@ -56,7 +56,7 @@ export async function createJobHandler(
     message_type: "TEXT",
     text: "Job created",
     required_approval: false,
-    created_at: new Date(),
+    created_at: new Date().toISOString(),
   };
 
   const job = createJob(business_id, business_type, systemMessage);
@@ -89,10 +89,12 @@ export async function postMessageHandler(
     });
     return;
   }
-  const { message_text, received_at } = parsed.data;
+  const { message_text, received_at, sender } = parsed.data;
   // Guard: only valid states can receive new client messages
   const validInboundStates = ["IDLE", "CLARIFYING", "FAILED_RETRY"];
-  if (!validInboundStates.includes(job.state)) {
+  
+  // Optional: If you want SME to inject messages at any time, you could bypass this state check if sender === "sme"
+  if (!validInboundStates.includes(job.state) && sender !== "sme") {
     res.status(409).json({
       success: false,
       error: {
@@ -102,22 +104,29 @@ export async function postMessageHandler(
     });
     return;
   }
-  // 1. Append the client message
-  const clientMessage: ChatMessage = {
+  // 1. Append the message
+  const chatMessage: ChatMessage = {
     message_id: randomUUID(),
     job_id: job.job_id,
-    sender: "client",
+    sender: sender ?? "client", // Use 'sme' if provided
     message_type: "TEXT",
     text: message_text,
     required_approval: false,
-    created_at: new Date(received_at),
+    created_at: new Date(received_at).toISOString(),
   };
-  appendMessage(job.job_id, clientMessage);
+  appendMessage(job.job_id, chatMessage);
+
+  // If SME is just sending a message, we don't necessarily restart the ingestion pipeline
+  if (sender === "sme") {
+    res.status(200).json({ success: true, data: job });
+    return;
+  }
+
   // 2. Transition to INGESTING
   const ingesting = transitionJob(job.state, "INGESTING");
   updateJobState(job.job_id, "INGESTING");
   logStateTransition(job.job_id, job.state, "INGESTING");
-  // 3. Invoke the agent loop (stub — wires in when agentLoop is delivered)
+  // 3. Invoke the agent loop
   const updatedJob = await runAgentLoop(job.job_id);
   res.status(200).json({ success: true, data: updatedJob });
 }
@@ -224,6 +233,7 @@ export async function editQuoteHandler(
   // Apply edits
   if (line_items) {
     job.quote.line_items = line_items.map((item) => ({
+      id: item.id || randomUUID(),
       name: item.name,
       quantity: item.quantity,
       unit_price: item.unit_price,
@@ -241,7 +251,7 @@ export async function editQuoteHandler(
     job.quote.subtotal = subtotal;
     job.quote.total = subtotal + contingencyTotal;
   }
-  job.updated_at = new Date();
+  job.updated_at = new Date().toISOString();
   logQuoteEdited(job.job_id, { line_items, notes });
   res.status(200).json({
     success: true,
@@ -305,7 +315,7 @@ export async function approveQuoteHandler(
     required_approval: true,
   });
   // 3. Update quote status and append to messages
-  job.quote.status = "SENT";
+  job.quote.status = "sent";
   const quoteMessage: ChatMessage = {
     message_id: randomUUID(),
     job_id: job.job_id,
@@ -313,7 +323,7 @@ export async function approveQuoteHandler(
     message_type: "QUOTE",
     text: job.quote.draft_message ?? "Your quote is ready.",
     required_approval: true,
-    created_at: new Date(sentAt),
+    created_at: sentAt,
   };
   appendMessage(job.job_id, quoteMessage);
   // 4. Transition to EXECUTED
@@ -324,7 +334,7 @@ export async function approveQuoteHandler(
     data: {
       job_id: job.job_id,
       state: "EXECUTED",
-      quote_status: "SENT",
+      quote_status: "sent",
       sent_at: sentAt,
     },
   });

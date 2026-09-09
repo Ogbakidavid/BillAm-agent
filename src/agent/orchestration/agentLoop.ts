@@ -106,7 +106,7 @@ async function handleClarification(job: Job, round: number): Promise<Job> {
     message_type: "CLARIFICATION",
     text: clarifyResult.draft_message_to_client,
     required_approval: false,
-    created_at: new Date(),
+    created_at: new Date().toISOString(),
   });
 
   AuditLog.logClarificationSent(job.job_id, clarifyResult.questions, round);
@@ -131,16 +131,21 @@ async function handleComputeQuote(job: Job): Promise<Job> {
 
   // Tool output uses {label, amount}; Job.ts's Quote type expects {name, total}.
   job.quote = {
-    status: "DRAFT",
+    id: `q-${Date.now()}`,
+    job_id: job.job_id,
+    status: "draft",
     line_items: quoteResult.line_items.map((item) => ({
+      id: `li-${Date.now()}-${Math.random()}`,
       name: item.label,
+      quantity: 1,
+      unit_price: item.amount,
       total: item.amount,
-      label: item.label,
     })),
     contingencies: quoteResult.contingencies.map((c) => ({
-      name: c.label,
-      amount: c.amount,
+      id: `c-${Date.now()}-${Math.random()}`,
       label: c.label,
+      rate: null,
+      amount: c.amount,
     })),
     subtotal: quoteResult.total_amount,
     total: quoteResult.total_amount,
@@ -149,6 +154,8 @@ async function handleComputeQuote(job: Job): Promise<Job> {
     payment_terms: "",
     assumptions: [],
     draft_message: quoteResult.draft_message_to_client,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 
   moveState(job, "AWAITING_HUMAN_APPROVAL");

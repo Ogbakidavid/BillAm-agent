@@ -6,11 +6,22 @@ export class AnthropicLLMClient implements LLMClient {
   private client: Anthropic | null = null;
 
   private getClient(): Anthropic {
-    if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY.startsWith("sk-ant-xxxx")) {
+    const key = process.env.ANTHROPIC_API_KEY;
+    console.log("[AnthropicLLMClient] API Key check:");
+    console.log("[AnthropicLLMClient] Key exists:", !!key);
+    console.log("[AnthropicLLMClient] Key length:", key?.length);
+    console.log("[AnthropicLLMClient] First 15 chars:", key?.substring(0, 15));
+    console.log("[AnthropicLLMClient] Last 10 chars:", key?.substring(Math.max(0, key.length - 10)));
+    console.log("[AnthropicLLMClient] Starts with sk-ant:", key?.startsWith("sk-ant"));
+
+    if (!key || key.startsWith("sk-ant-xxxx")) {
       throw new LLMProviderError("anthropic", "Anthropic API key not configured");
     }
+
     if (!this.client) {
-      this.client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      console.log("[AnthropicLLMClient] Creating new Anthropic client with key");
+      this.client = new Anthropic({ apiKey: key });
+      console.log("[AnthropicLLMClient] Client created successfully");
     }
     return this.client;
   }
@@ -19,12 +30,14 @@ export class AnthropicLLMClient implements LLMClient {
     const client = this.getClient();
 
     try {
+      console.log("[AnthropicLLMClient] Calling messages.create with model: claude-sonnet-4-5");
       const message = await client.messages.create({
         model: "claude-sonnet-4-5",
         max_tokens: 4096,
         messages: [{ role: "user", content: prompt }],
       });
 
+      console.log("[AnthropicLLMClient] Response received:", message.stop_reason);
       const textBlock = message.content.find((block) => block.type === "text");
       if (!textBlock || textBlock.type !== "text") {
         throw new Error("No text content in Anthropic response");
@@ -32,6 +45,7 @@ export class AnthropicLLMClient implements LLMClient {
 
       return textBlock.text;
     } catch (err) {
+      console.error("[AnthropicLLMClient] ERROR:", err);
       throw new LLMProviderError(
         "anthropic",
         err instanceof Error ? err.message : String(err)

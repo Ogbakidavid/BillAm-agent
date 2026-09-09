@@ -6,10 +6,10 @@ const jobs = new Map<string, Job>();
 
 export function createJob(
   businessId: string,
-  businessType: "caterer" | "tailor" | "event_vendor",
+  businessType: "event_vendor" | "caterer" | "tailor" | "photographer" | "event_planner" | "equipment_rental",
   message: ChatMessage
 ): Job {
-  const now = new Date();
+  const now = new Date().toISOString();
 
   const job: Job = {
     job_id: randomUUID(),
@@ -22,6 +22,7 @@ export function createJob(
     missing_required_fields: [],
     quote: null,
     error_message: null,
+    audit_events: [],
     created_at: now,
     updated_at: now,
   };
@@ -39,7 +40,7 @@ export function appendMessage(jobId: string, message: ChatMessage): Job | undefi
   if (!job) return undefined;
 
   job.messages.push(message);
-  job.updated_at = new Date();
+  job.updated_at = new Date().toISOString();
   return job;
 }
 
@@ -51,7 +52,7 @@ export function mergeExtractedFields(
   if (!job) return undefined;
 
   job.extracted_fields = { ...job.extracted_fields, ...newFields };
-  job.updated_at = new Date();
+  job.updated_at = new Date().toISOString();
   return job;
 }
 
@@ -60,7 +61,7 @@ export function updateJobState(jobId: string, newState: JobState): Job | undefin
   if (!job) return undefined;
 
   job.state = newState;
-  job.updated_at = new Date();
+  job.updated_at = new Date().toISOString();
   return job;
 }
 
@@ -69,7 +70,7 @@ export function updateMissingFields(jobId: string, missing: string[]): Job | und
   if (!job) return undefined;
 
   job.missing_required_fields = missing;
-  job.updated_at = new Date();
+  job.updated_at = new Date().toISOString();
   return job;
 }
 

@@ -3,7 +3,7 @@
 /**
  * Api.ts
  * API request and response types
- * Source: API_SPECIFICATION.md
+ * Source: API_SPECIFICATION.md & Frontend Sync
  */
 
 // ==================== Common Response Shape ====================
@@ -32,7 +32,7 @@ export type ApiErrorCode =
 // ==================== POST /jobs ====================
 export interface CreateJobRequest {
   business_id: string;
-  business_type: "caterer" | "tailor" | "event_vendor";
+  business_type: "event_vendor" | "caterer" | "tailor" | "photographer" | "event_planner" | "equipment_rental";
 }
 
 export interface CreateJobResponse {
@@ -45,12 +45,14 @@ export interface CreateJobResponse {
   extracted_fields: Record<string, any>;
   missing_required_fields: string[];
   quote: any | null;
+  audit_events: any[];
 }
 
 // ==================== POST /jobs/:id/messages ====================
 export interface SendMessageRequest {
   message_text: string;
   received_at: string;
+  sender?: "client" | "sme"; // Added sender override so SMEs can inject messages
 }
 
 export interface SendMessageResponse {
@@ -71,19 +73,25 @@ export interface GetJobResponse {
   extracted_fields: Record<string, any>;
   missing_required_fields: string[];
   quote: any | null;
+  audit_events: any[];
 }
 
 // ==================== GET /jobs/:id/quote ====================
 export interface GetQuoteResponse {
-  status: "DRAFT" | "SENT";
+  id: string;
+  job_id: string;
+  status: "draft" | "awaiting_approval" | "sent" | "expired";
   line_items: Array<{
+    id: string;
     name: string;
-    quantity?: number;
-    unit_price?: number;
+    quantity: number;
+    unit_price: number;
     total: number;
   }>;
   contingencies: Array<{
-    name: string;
+    id: string;
+    label: string;
+    rate: number | null;
     amount: number;
   }>;
   subtotal: number;
@@ -93,14 +101,18 @@ export interface GetQuoteResponse {
   payment_terms: string;
   assumptions: string[];
   draft_message?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // ==================== PATCH /jobs/:id/quote ====================
 export interface EditQuoteRequest {
   line_items?: Array<{
+    id: string;
     name: string;
-    quantity?: number;
-    unit_price?: number;
+    quantity: number;
+    unit_price: number;
+    total: number;
   }>;
   notes?: string;
 }

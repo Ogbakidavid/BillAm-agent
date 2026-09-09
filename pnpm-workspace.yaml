@@ -1,4 +1,12 @@
 allowBuilds:
+  '@parcel/watcher': true
   '@scarf/scarf': false
+  better-sqlite3: true
   esbuild: true
+  node-llama-cpp: false
+  tree-sitter-go: false
+  tree-sitter-javascript: false
+  tree-sitter-python: false
+  tree-sitter-rust: false
+  tree-sitter-typescript: true
   unrs-resolver: true

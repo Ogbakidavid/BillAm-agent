@@ -7,18 +7,20 @@ import { z } from "zod";
 
 export const createJobSchema = z.object({
   business_id: z.string().min(1, "business_id is required"),
-  business_type: z.enum(["caterer", "tailor", "event_vendor"]),
+  business_type: z.enum(["event_vendor", "caterer", "tailor", "photographer", "event_planner", "equipment_rental"]),
 });
 
 export const postMessageSchema = z.object({
   message_text: z.string().min(1, "message_text cannot be empty"),
   received_at: z.string().min(1, "received_at is required"),
+  sender: z.enum(["client", "sme"]).optional(),
 });
 
 export const editQuoteSchema = z.object({
   line_items: z
   .array(
     z.object({
+      id: z.string().optional(),
       name: z.string(),
       quantity: z.number().optional(),
       unit_price: z.number().optional(),

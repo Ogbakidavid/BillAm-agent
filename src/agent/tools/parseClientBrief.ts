@@ -16,7 +16,7 @@ import { PARSE_BRIEF_SYSTEM_PROMPT, buildParseBriefUserPrompt } from "../prompts
 const parseClientBriefInputSchema = z.object({
   job_id: z.string().min(1, "Job ID is required"),
   message_text: z.string().min(1, "Message text is required"),
-  business_type: z.enum(["caterer", "tailor", "event_vendor"]),
+  business_type: z.enum(["event_vendor", "caterer", "tailor", "photographer", "event_planner", "equipment_rental"]),
   existing_fields: z.record(z.string(), z.any()).optional(),
 });
 

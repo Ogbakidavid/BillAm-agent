@@ -156,22 +156,26 @@ describe("REST API Endpoint Handlers (BE-09, BE-10, BE-11)", () => {
       const jobId = createRes.body.data.job_id;
       const job = getJob(jobId)!;
       job.quote = {
-        status: "DRAFT",
-        line_items: [{ name: "Standard Decor", quantity: 1, unit_price: 100000, total: 100000 }],
-        contingencies: [{ name: "Logistics", amount: 10000 }],
+        id: "q-1",
+        job_id: jobId,
+        status: "draft",
+        line_items: [{ id: "l-1", name: "Standard Decor", quantity: 1, unit_price: 100000, total: 100000 }],
+        contingencies: [{ id: "c-1", label: "Logistics", rate: null, amount: 10000 }],
         subtotal: 100000,
         total: 110000,
         currency: "NGN",
         validity_days: 7,
         payment_terms: "50/50",
         assumptions: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
       updateJobState(jobId, "AWAITING_HUMAN_APPROVAL");
 
       const editRes = await request(app)
         .patch(`/jobs/${jobId}/quote`)
         .send({
-          line_items: [{ name: "Standard Decor", quantity: 1, unit_price: 120000 }],
+          line_items: [{ id: "l-1", name: "Standard Decor", quantity: 1, unit_price: 120000, total: 120000 }],
           notes: "Updated price",
         });
 
@@ -193,15 +197,19 @@ describe("REST API Endpoint Handlers (BE-09, BE-10, BE-11)", () => {
       const jobId = createRes.body.data.job_id;
       const job = getJob(jobId)!;
       job.quote = {
-        status: "DRAFT",
-        line_items: [{ name: "Standard Decor", quantity: 1, unit_price: 100000, total: 100000 }],
-        contingencies: [{ name: "Logistics", amount: 10000 }],
+        id: "q-1",
+        job_id: jobId,
+        status: "draft",
+        line_items: [{ id: "l-1", name: "Standard Decor", quantity: 1, unit_price: 100000, total: 100000 }],
+        contingencies: [{ id: "c-1", label: "Logistics", rate: null, amount: 10000 }],
         subtotal: 100000,
         total: 110000,
         currency: "NGN",
         validity_days: 7,
         payment_terms: "50/50",
         assumptions: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
       updateJobState(jobId, "AWAITING_HUMAN_APPROVAL");
 
@@ -214,7 +222,7 @@ describe("REST API Endpoint Handlers (BE-09, BE-10, BE-11)", () => {
       expect(approveRes.status).toBe(200);
       expect(approveRes.body.success).toBe(true);
       expect(approveRes.body.data.state).toBe("EXECUTED");
-      expect(job.quote.status).toBe("SENT");
+      expect(job.quote.status).toBe("sent");
     });
   });
 

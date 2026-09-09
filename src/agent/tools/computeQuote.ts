@@ -21,7 +21,7 @@ import {
 const computeQuoteInputSchema = z.object({
   job_id: z.string().min(1, "Job ID is required"),
   structured_brief: z.record(z.string(), z.any()),
-  business_type: z.enum(["caterer", "tailor", "event_vendor"]),
+  business_type: z.enum(["event_vendor", "caterer", "tailor", "photographer", "event_planner", "equipment_rental"]),
 });
 
 function loadPriceCatalog(businessType: string): Record<string, any> {
