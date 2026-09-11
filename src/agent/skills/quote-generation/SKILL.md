@@ -23,7 +23,8 @@ A quote consists of the following components based on the frontend structure:
 
 - **subtotal**: Sum of all line item totals (must be a number).
 - **total**: Subtotal + sum of all contingency amounts (must be a number).
-- **status**: Must be set to `draft`.
+- **status**: The backend stores a generated quote as `awaiting_approval` until
+  the SME approves it; approval changes it to `sent`.
 
 ## Best Practices
 - Ensure all math is perfectly accurate.

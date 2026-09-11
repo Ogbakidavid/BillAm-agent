@@ -32,7 +32,7 @@ export const editQuoteSchema = z.object({
 });
 
 export const approveQuoteSchema = z.object({
-  approved_by: z.string().min(1, "approved_by is required"),
+  approved_by: z.string().min(1, "approved_by is required").default("dashboard_sme"),
 });
 
 export const manualInputSchema = z.object({

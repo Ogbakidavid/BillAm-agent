@@ -31,6 +31,15 @@ function seed(): void {
       created_at: "2026-08-01T10:00:00Z",
       updated_at: "2026-08-01T10:00:00Z",
     },
+    // Legacy API fixture alias retained for existing availability clients.
+    {
+      business_id: "biz-001",
+      date: "2026-09-15",
+      status: "BOOKED",
+      reason: "Wedding booking",
+      created_at: "2026-08-01T10:00:00Z",
+      updated_at: "2026-08-01T10:00:00Z",
+    },
     {
       business_id: "biz-event-decoration",
       date: "2026-09-22",

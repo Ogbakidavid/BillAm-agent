@@ -32,6 +32,8 @@ describe("REST API Endpoint Handlers (BE-09, BE-10, BE-11)", () => {
       expect(res.body.data.state).toBe("IDLE");
       expect(res.body.data.business_id).toBe("business-1");
       expect(res.body.data.business_type).toBe("event_vendor");
+      expect(res.body.data.extracted_fields.client_name).toBeTruthy();
+      expect(res.body.data.extracted_fields.client_phone).toMatch(/^\+234 80\d{8}$/);
     });
 
     it("returns validation error on empty fields", async () => {

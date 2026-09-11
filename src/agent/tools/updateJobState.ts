@@ -14,6 +14,7 @@ import * as JobStore from "../../state/JobStore";
 import * as AuditLog from "../../state/auditLog";
 import { transitionJob } from "../../state/stateMachine";
 import { JobState } from "../../types/Job";
+import { randomUUID } from "crypto";
 
 const lineItemSchema = z.object({
   name: z.string(),
@@ -74,7 +75,13 @@ export const updateJobStateTool = tool({
     }
 
     // Validate and apply state transition
-    const transition = transitionJob(job.state, input.new_state as JobState);
+    // Agents may persist fields while continuing to reason.  That is a data
+    // update, not a state transition, so a REASONING → REASONING write must
+    // not consume a tool turn or fail the whole workflow.
+    const isStateUnchanged = job.state === input.new_state;
+    const transition = isStateUnchanged
+      ? { success: true, error: null }
+      : transitionJob(job.state, input.new_state as JobState);
     if (!transition.success) {
       throw new Error(
         `Invalid state transition ${job.state} → ${input.new_state}: ${transition.error}`,
@@ -127,7 +134,7 @@ export const updateJobStateTool = tool({
             "50% deposit to confirm booking, balance due 3 days before the event.",
           assumptions: [],
           draft_message: input.quote.draft_message_to_client,
-          status: "draft",
+          status: "awaiting_approval",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -142,6 +149,26 @@ export const updateJobStateTool = tool({
     }
 
     JobStore.updateJobState(input.job_id, input.new_state as JobState);
+
+    // A draft quote intentionally remains hidden until SME approval, but the
+    // client must still receive a visible acknowledgement in the live chat.
+    // Persist it here so it cannot be lost when the model finishes after
+    // saving the quote without separately calling simulate_send_message.
+    if (input.quote && input.new_state === "AWAITING_HUMAN_APPROVAL") {
+      const currentJob = JobStore.getJob(input.job_id);
+      const lastMessage = currentJob?.messages[currentJob.messages.length - 1];
+      if (!lastMessage || lastMessage.sender !== "agent") {
+        JobStore.appendMessage(input.job_id, {
+          message_id: randomUUID(),
+          job_id: input.job_id,
+          sender: "agent",
+          message_type: "TEXT",
+          text: "Thanks for sharing those details. I’ve prepared a quote for the business owner to review and will get back to you once it has been approved.",
+          required_approval: false,
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
 
     return {
       job_id: input.job_id,

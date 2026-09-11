@@ -175,7 +175,11 @@ function simpleQuote(
 export function seedInitialJobs(): void {
   // Always try to load persisted jobs from disk first
   loadFromDisk();
-  if (jobs.size > 0) return;
+  // Persisted runtime jobs must not suppress the demo records for the active
+  // business. Only skip seeding when the canonical seed set is already
+  // present; this allows a fresh store (or a store containing another
+  // business's test job) to still populate the dashboard fixtures.
+  if (jobs.has("ed-job-001")) return;
 
   // Timestamps (spread over a few days so the dashboard looks realistic)
   const t = {

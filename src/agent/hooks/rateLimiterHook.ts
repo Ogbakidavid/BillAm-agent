@@ -11,7 +11,10 @@ import {
   BeforeToolCallEvent,
 } from "@strands-agents/sdk";
 
-const MAX_TOOL_CALLS_PER_INVOCATION = 5;
+// A complete quote path can legitimately load knowledge and pricing, use two
+// skills, persist fields, and persist the final quote. Leave room for one
+// recovery write while still preventing runaway loops.
+const MAX_TOOL_CALLS_PER_INVOCATION = 8;
 
 export class RateLimiterHook implements Plugin {
   name = "rate-limiter-hook";

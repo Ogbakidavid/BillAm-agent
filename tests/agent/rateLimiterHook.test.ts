@@ -34,7 +34,7 @@ describe("Rate Limiter Hook", () => {
     );
   });
 
-  it("should enforce the tool call rate limit (max 5)", () => {
+  it("should enforce the tool call rate limit (max 8)", () => {
     rateLimiterHook.initAgent(mockAgent as unknown as LocalAgent);
 
     // Extract the registered callback functions
@@ -44,15 +44,15 @@ describe("Rate Limiter Hook", () => {
     // Reset the counter by firing BeforeInvocationEvent
     beforeInvocationCallback();
 
-    // Simulate 5 allowed tool calls
-    for (let i = 0; i < 5; i++) {
+    // Simulate 8 allowed tool calls
+    for (let i = 0; i < 8; i++) {
       const event: any = { toolUse: { name: "test_tool" } };
       beforeToolCallCallback(event);
       expect(event.cancel).toBeUndefined(); // Should not be canceled
     }
 
-    // Simulate the 6th tool call (which should trigger the rate limit)
-    const blockedEvent: any = { toolUse: { name: "test_tool_6" } };
+    // Simulate the 9th tool call (which should trigger the rate limit)
+    const blockedEvent: any = { toolUse: { name: "test_tool_9" } };
     beforeToolCallCallback(blockedEvent);
 
     expect(blockedEvent.cancel).toBeDefined();

@@ -31,6 +31,7 @@ export async function runAgentLoop(jobId: string): Promise<Job> {
     const prompt = `
 Please process this job according to the SOP.
 
+current_date: ${new Date().toISOString().slice(0, 10)}
 job_id: ${job.job_id}
 business_type: ${job.business_type}
 clarification_round: ${job.clarification_round}
