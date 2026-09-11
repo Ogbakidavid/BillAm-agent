@@ -12,39 +12,42 @@ describe("auditLog", () => {
     _clearAuditLog();
   });
 
-  test("logStateTransition records from and to state", () => {
+  test("logStateTransition records system event type", () => {
     logStateTransition("job_1", "IDLE", "INGESTING");
     const trail = getAuditTrail("job_1");
 
     expect(trail).toHaveLength(1);
-    expect(trail[0].event_type).toBe("STATE_TRANSITION");
-    expect(trail[0].from_state).toBe("IDLE");
-    expect(trail[0].to_state).toBe("INGESTING");
+    expect(trail[0].type).toBe("system");
+    expect(trail[0].label).toBe("system");
   });
 
-  test("logClarificationSent always sets required_approval to false", () => {
+  test("logClarificationSent records details and false required_approval", () => {
     logClarificationSent("job_1", ["What's your budget?"], 1);
     const trail = getAuditTrail("job_1");
 
-    expect(trail[0].event_type).toBe("CLARIFICATION_SENT");
-    expect(trail[0].details?.required_approval).toBe(false);
+    expect(trail[0].type).toBe("system");
+    const details = JSON.parse(trail[0].detail ?? "{}");
+    expect(details.required_approval).toBe(false);
+    expect(details.questions).toEqual(["What's your budget?"]);
   });
 
-  test("logQuoteApproved always sets required_approval to true", () => {
+  test("logQuoteApproved records sme event and true required_approval", () => {
     logQuoteApproved("job_1", 507000);
     const trail = getAuditTrail("job_1");
 
-    expect(trail[0].event_type).toBe("QUOTE_APPROVED");
-    expect(trail[0].details?.required_approval).toBe(true);
-    expect(trail[0].actor).toBe("sme");
+    expect(trail[0].type).toBe("sme");
+    const details = JSON.parse(trail[0].detail ?? "{}");
+    expect(details.required_approval).toBe(true);
+    expect(details.quote_total).toBe(507000);
   });
 
   test("logQuoteEdited records the SME's changes", () => {
     logQuoteEdited("job_1", { total: 490000 });
     const trail = getAuditTrail("job_1");
 
-    expect(trail[0].event_type).toBe("QUOTE_EDITED");
-    expect(trail[0].details?.changes).toEqual({ total: 490000 });
+    expect(trail[0].type).toBe("sme");
+    const details = JSON.parse(trail[0].detail ?? "{}");
+    expect(details.changes).toEqual({ total: 490000 });
   });
 
   test("getAuditTrail only returns events for the given job", () => {
@@ -61,10 +64,10 @@ describe("auditLog", () => {
     logQuoteApproved("job_1", 100000);
 
     const trail = getAuditTrail("job_1");
-    expect(trail.map((e) => e.event_type)).toEqual([
-      "STATE_TRANSITION",
-      "CLARIFICATION_SENT",
-      "QUOTE_APPROVED",
+    expect(trail.map((e) => e.type)).toEqual([
+      "system",
+      "system",
+      "sme",
     ]);
   });
 });

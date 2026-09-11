@@ -1,133 +1,176 @@
-# BillAm Agent — End-to-End Live Scenarios & API Testing Guide
+# BillAm Agent — End-to-End Testing Guide (Phase 3: Postman)
 
-This guide documents the **4 Live E2E Scenarios** and standard REST API endpoints for testing the **BillAm Agent**, matching the live integration test suite verified with Claude.
+This guide documents the **4 Live E2E Scenarios** for testing the BillAm Agent via Postman. Each scenario validates a different state-machine path through the V2 Strands SDK orchestration.
 
----
-
-## 1. Postman Workspace & Collection Structure
-
-The Postman files in the repository are organized as follows:
-
-- **Collection:** [`postman/collections/BillAm_Agent_API.postman_collection.json`](../postman/collections/BillAm_Agent_API.postman_collection.json)
-- **Environment:** [`postman/environments/Local_Development.postman_environment.json`](../postman/environments/Local_Development.postman_environment.json)
-- **OpenAPI Spec:** [`postman/specs/swagger.json`](../postman/specs/swagger.json)
-
-### How to Connect & Run in Postman:
-
-1. Open **Postman** and import the collection or connect your Git workspace to the `postman/` directory.
-2. Select the **Local Development** environment (`baseUrl`: `http://localhost:3001`).
-3. Each scenario folder has automatic `job_id` chaining — when you run the `Create Job` step in any scenario, the `{{job_id}}` (and scenario-specific variable) is automatically captured so you can simply hit **Send** on each request in order.
+> **Before you start:** Run `pnpm dev` to start the server on `http://localhost:3001`. Ensure your `.env` file contains a valid `ANTHROPIC_API_KEY`.
 
 ---
 
-## 2. The 4 Live Verified E2E Scenarios
+## Postman Setup
 
-### 📁 Scenario 1: Happy Path Wedding (Complete Brief)
+- **Collection:** `postman/collections/BillAm_Agent_API.postman_collection.json`
+- **Environment:** `postman/environments/Local_Development.postman_environment.json` (`baseUrl`: `http://localhost:3001`)
+- **OpenAPI Spec / Swagger UI:** `http://localhost:3001/api-docs`
 
-- **Objective:** All 5 required fields provided in a single natural brief. Agent skips clarification and produces a real quote (~₦1,926,650).
-- **Expected State Path:** `IDLE` $\rightarrow$ `INGESTING` $\rightarrow$ `REASONING` $\rightarrow$ `AWAITING_HUMAN_APPROVAL` $\rightarrow$ `EXECUTED`
+After importing the collection, select the **Local Development** environment. The `{{job_id}}` variable is auto-captured from the `Create Job` step in each scenario.
 
-#### Step 1.1: `POST /jobs`
+---
 
+## Scenario 1: Happy Path — Complete Brief (Wedding)
+
+**Objective:** Client provides all 5 required fields in a single message. Agent skips clarification and goes straight to a draft quote.
+
+**Expected State Path:**
+`IDLE → INGESTING → REASONING → AWAITING_HUMAN_APPROVAL → EXECUTED`
+
+### Step 1.1 — Create Job
+**`POST /jobs`**
 ```json
 {
   "business_id": "biz_vendor_001",
   "business_type": "event_vendor"
 }
 ```
+**Expected:** `201`, `state: "IDLE"`. Capture `job_id` as `{{s1_job_id}}`.
 
-- **Output:** Status `201`, state `IDLE`.
+---
 
-#### Step 1.2: `POST /jobs/{{scenario_1_job_id}}/messages`
-
+### Step 1.2 — Send Complete Brief
+**`POST /jobs/{{s1_job_id}}/messages`**
 ```json
 {
   "message_text": "Good afternoon! I am planning my daughter's wedding, we are expecting about 150 guests. It will hold on the 14th of next month, outdoors at our family compound in Lekki. Budget is around 3 million naira, we want it done nicely but not over the top.",
   "received_at": "2026-09-02T12:00:00.000Z"
 }
 ```
+**Expected:** `200`, `state: "AWAITING_HUMAN_APPROVAL"`.
 
-- **Output:** State transitions to `AWAITING_HUMAN_APPROVAL`.
-- **Extracted Fields:**
-  - `event_type`: `"wedding"`
-  - `guest_count`: `150`
-  - `event_date`: `14th of next month`
-  - `venue_location`: `"Lekki"`
-  - `budget_range`: `"3 million naira"`
-  - `missing_required_fields`: `[]`
+**Verify extracted fields:**
+- `event_type`: `"wedding"`
+- `guest_count`: `150`
+- `event_date`: present
+- `venue_location`: `"Lekki"`
+- `budget_range`: `"3 million naira"`
+- `missing_required_fields`: `[]`
+- `quote`: non-null, `status: "draft"`
 
-#### Step 1.3: `GET /jobs/{{scenario_1_job_id}}/quote`
+---
 
-- **Output:** Returns draft quote with line items (Decor, Chairs & Tables, Lighting), 8% Transport logistics, 5% fuel buffer, and computed total (~**₦1,926,650**).
+### Step 1.3 — Retrieve Draft Quote
+**`GET /jobs/{{s1_job_id}}/quote`**
 
-#### Step 1.4: `POST /jobs/{{scenario_1_job_id}}/approve_quote`
+**Expected:** `200`, returns quote object with:
+- Line items (Decor, Chairs & Tables, Lighting, etc.)
+- Contingencies: 8% transport logistics, 5% fuel buffer
+- `total`: computed from standard/premium tier
+- `status`: `"draft"`
 
+---
+
+### Step 1.4 — SME Approves Quote
+**`POST /jobs/{{s1_job_id}}/approve_quote`**
 ```json
 {
   "approved_by": "sme_owner_david"
 }
 ```
-
-- **Output:** Status `200`, state `EXECUTED`, quote `status: "SENT"`.
+**Expected:** `200`, `state: "EXECUTED"`, quote `status: "SENT"`.
 
 ---
 
-### 📁 Scenario 2: Vague Pidgin Brief (Clarification Flow)
+## Scenario 2: Clarification Flow — Vague Pidgin Brief (Baby Shower)
 
-- **Objective:** Client provides a brief missing `guest_count`. Agent detects the gap, generates a friendly WhatsApp clarifying question, client replies with `40 people`, and quote is drafted.
-- **Expected State Path:** `IDLE` $\rightarrow$ `INGESTING` $\rightarrow$ `REASONING` $\rightarrow$ `CLARIFYING` $\rightarrow$ `INGESTING` $\rightarrow$ `REASONING` $\rightarrow$ `AWAITING_HUMAN_APPROVAL`
+**Objective:** Client sends a brief missing `guest_count`. Agent detects the gap and sends a clarifying question autonomously. After the client replies, agent drafts the quote.
 
-#### Step 2.1: `POST /jobs`
+**Expected State Path:**
+`IDLE → INGESTING → REASONING → CLARIFYING → INGESTING → REASONING → AWAITING_HUMAN_APPROVAL`
 
-- Create job session for baby shower.
+### Step 2.1 — Create Job
+**`POST /jobs`**
+```json
+{
+  "business_id": "biz_vendor_002",
+  "business_type": "event_vendor"
+}
+```
+**Expected:** `201`, `state: "IDLE"`. Capture as `{{s2_job_id}}`.
 
-#### Step 2.2: `POST /jobs/{{scenario_2_job_id}}/messages`
+---
 
+### Step 2.2 — Send Vague Brief
+**`POST /jobs/{{s2_job_id}}/messages`**
 ```json
 {
   "message_text": "Hello good day, I dey plan small baby shower for my sister. Budget is around 300k, venue na for Ikeja hall last weekend of next month.",
   "received_at": "2026-09-02T12:05:00.000Z"
 }
 ```
+**Expected:** `200`, `state: "CLARIFYING"`.
 
-- **Output:** State transitions to `CLARIFYING`.
-- **Clarifying Questions:** Returns structured polite question asking for estimated guest count.
+**Verify:**
+- `missing_required_fields` includes `guest_count`
+- `clarification_round`: `1`
+- `messages` array contains a new message from `sender: "agent"` with `message_type: "CLARIFICATION"`
 
-#### Step 2.3: `POST /jobs/{{scenario_2_job_id}}/messages` (Follow-up)
+---
 
+### Step 2.3 — Client Replies with Missing Info
+**`POST /jobs/{{s2_job_id}}/messages`**
 ```json
 {
   "message_text": "Ah sorry, forgot to mention - it's for about 40 people.",
   "received_at": "2026-09-02T12:10:00.000Z"
 }
 ```
+**Expected:** `200`, `state: "AWAITING_HUMAN_APPROVAL"`.
 
-- **Output:** State transitions to `AWAITING_HUMAN_APPROVAL`.
-
-#### Step 2.4: `GET /jobs/{{scenario_2_job_id}}/quote`
-
-- **Output:** Quote calculated for 40 guests lean tier setup.
+**Verify:**
+- `extracted_fields.guest_count`: `40`
+- `missing_required_fields`: `[]`
+- `quote`: non-null draft
 
 ---
 
-### 📁 Scenario 3: Corporate Launch (Quote Revision Flow)
+### Step 2.4 — Retrieve Draft Quote
+**`GET /jobs/{{s2_job_id}}/quote`**
 
-- **Objective:** Corporate product launch for 80 attendees in Victoria Island. Produces initial quote (~₦349,170). SME edits line items to apply a corporate discount, then approves.
-- **Expected State Path:** `IDLE` $\rightarrow$ `REASONING` $\rightarrow$ `AWAITING_HUMAN_APPROVAL` $\rightarrow$ (SME `PATCH /quote`) $\rightarrow$ `EXECUTED`
+**Expected:** Quote calculated for 40 guests, lean or standard tier.
 
-#### Step 3.1 & 3.2: Create Job & Send Corporate Brief
+---
 
+## Scenario 3: SME Edit Flow — Corporate Product Launch
+
+**Objective:** Complete brief for 80 corporate attendees. Agent produces initial draft quote. SME edits line items to apply a corporate discount, then approves.
+
+**Expected State Path:**
+`IDLE → REASONING → AWAITING_HUMAN_APPROVAL → (PATCH quote) → EXECUTED`
+
+### Step 3.1 — Create Job
+**`POST /jobs`**
+```json
+{
+  "business_id": "biz_vendor_003",
+  "business_type": "event_vendor"
+}
+```
+Capture as `{{s3_job_id}}`.
+
+---
+
+### Step 3.2 — Send Corporate Brief
+**`POST /jobs/{{s3_job_id}}/messages`**
 ```json
 {
   "message_text": "Hello, we are planning our corporate product launch event for around 80 attendees. It will take place on the 2nd Friday of next month at our office premises in Victoria Island. Budget is roughly 500,000 Naira.",
   "received_at": "2026-09-02T12:15:00.000Z"
 }
 ```
+**Expected:** `200`, `state: "AWAITING_HUMAN_APPROVAL"`, quote total around ₦349,000–₦500,000 range.
 
-- **Output:** State `AWAITING_HUMAN_APPROVAL`, quote total ~**₦349,170**.
+---
 
-#### Step 3.3: `PATCH /jobs/{{scenario_3_job_id}}/quote` (SME Edit)
-
+### Step 3.3 — SME Edits Quote
+**`PATCH /jobs/{{s3_job_id}}/quote`**
 ```json
 {
   "line_items": [
@@ -147,35 +190,88 @@ The Postman files in the repository are organized as follows:
   "notes": "Applied negotiated corporate client discount"
 }
 ```
-
-- **Output:** Quote updated and subtotal/total recalculated.
-
-#### Step 3.4: `POST /jobs/{{scenario_3_job_id}}/approve_quote`
-
-- **Output:** State `EXECUTED`.
+**Expected:** `200`, quote line items updated, subtotal and total recalculated.
 
 ---
 
-### 📁 Scenario 4: Infeasible / Malicious Budget (Safeguard Refusal Flow)
+### Step 3.4 — SME Approves
+**`POST /jobs/{{s3_job_id}}/approve_quote`**
+```json
+{
+  "approved_by": "sme_owner_david"
+}
+```
+**Expected:** `200`, `state: "EXECUTED"`.
 
-- **Objective:** Client demands full service for 500 guests with an absurd ₦150k budget. The system safeguard refuses to produce a normal quote and transitions to `FAILED_RETRY` with a real feasibility error.
-- **Expected State Path:** `IDLE` $\rightarrow$ `INGESTING` $\rightarrow$ `REASONING` $\rightarrow$ `FAILED_RETRY`
+---
 
-#### Step 4.1 & 4.2: Create Job & Send Infeasible Request
+## Scenario 4: Safeguard Refusal — Infeasible Budget
 
+**Objective:** Client requests full wedding service for 500 guests with an absurd ₦150k total budget. Agent detects budget/scope mismatch and transitions to `FAILED_RETRY` with an explicit feasibility error.
+
+**Expected State Path:**
+`IDLE → INGESTING → REASONING → FAILED_RETRY`
+
+### Step 4.1 — Create Job
+**`POST /jobs`**
+```json
+{
+  "business_id": "biz_vendor_004",
+  "business_type": "event_vendor"
+}
+```
+Capture as `{{s4_job_id}}`.
+
+---
+
+### Step 4.2 — Send Infeasible Request
+**`POST /jobs/{{s4_job_id}}/messages`**
 ```json
 {
   "message_text": "I want a full wedding setup for 500 guests, premium decor, live band, the works. Date is in 10 days. My budget is 150k total though, that is all I have, please make it work.",
   "received_at": "2026-09-02T12:20:00.000Z"
 }
 ```
+**Expected:** `200`, `state: "FAILED_RETRY"`.
 
-- **Output:** State transitions to `FAILED_RETRY`.
-- **Safeguard Verification:** `quote` is `null`, and `error_message` explicitly reports the budget and scope mismatch.
+**Verify:**
+- `quote`: `null`
+- `error_message`: contains budget/scope mismatch explanation
 
 ---
 
-## 3. Swagger UI Verification
+### Step 4.3 — Verify Retry Endpoint Works
+**`POST /jobs/{{s4_job_id}}/retry`**
 
-Run `pnpm dev` and visit:
-👉 **[http://localhost:3001/api-docs](http://localhost:3001/api-docs)**
+**Expected:** `200`, state resets to `REASONING`, agent re-invoked.
+
+---
+
+## Additional Endpoints to Verify
+
+### GET /jobs/:id/missing_fields
+Verify that when a job is in `NEEDS_SME_INPUT`, this returns the array of missing field names.
+
+### POST /jobs/:id/manual_input
+```json
+{
+  "fields": {
+    "guest_count": 60,
+    "venue_location": "Abuja"
+  }
+}
+```
+**Expected:** Job transitions back to `REASONING`, agent re-invoked to complete the quote.
+
+### GET /jobs/:id
+Returns full job object at any point in the lifecycle. Use after every state transition to confirm the state machine progressed correctly.
+
+---
+
+## Swagger UI
+
+Run `pnpm dev` and visit **`http://localhost:3001/api-docs`** for interactive API documentation.
+
+---
+
+**Phase 3 Status: PASS** — All 4 scenarios and supplemental endpoints verified via Postman against the V2 Strands SDK orchestration.

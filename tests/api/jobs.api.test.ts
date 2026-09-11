@@ -2,10 +2,12 @@ import request from "supertest";
 import { app } from "../../src/app";
 import { _clearAllJobs, getJob, updateJobState, updateMissingFields } from "../../src/state/JobStore";
 import { _clearAuditLog } from "../../src/state/auditLog";
-import { llmProvider } from "../../src/llm";
+import { runAgentLoop } from "../../src/agent/orchestration/agentLoop";
 
-jest.mock("../../src/llm", () => ({
-  llmProvider: { generateResponse: jest.fn() },
+jest.mock("../../src/agent/orchestration/agentLoop", () => ({
+  runAgentLoop: jest.fn().mockImplementation(async (jobId: string) => {
+    return getJob(jobId);
+  }),
 }));
 
 describe("REST API Endpoint Handlers (BE-09, BE-10, BE-11)", () => {
@@ -13,13 +15,6 @@ describe("REST API Endpoint Handlers (BE-09, BE-10, BE-11)", () => {
     _clearAllJobs();
     _clearAuditLog();
     jest.clearAllMocks();
-
-    (llmProvider.generateResponse as jest.Mock).mockResolvedValue(
-      JSON.stringify({
-        extracted_fields: { event_type: "wedding" },
-        missing_required_fields: ["guest_count", "event_date"],
-      })
-    );
   });
 
   describe("POST /jobs", () => {

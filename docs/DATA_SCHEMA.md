@@ -1,4 +1,4 @@
-# BillAm Agent — Data Schema
+# BillAm Agent — Data Schema (V2)
 
 ## 1. Shared Types
 ```ts
@@ -9,192 +9,186 @@ export type CurrencyCode = "NGN";
 
 ## 2. JobState
 ```ts
-export enum JobState {
-  IDLE = "IDLE",
-  INGESTING = "INGESTING",
-  REASONING = "REASONING",
-  CLARIFYING = "CLARIFYING",
-  NEEDS_SME_INPUT = "NEEDS_SME_INPUT",
-  AWAITING_HUMAN_APPROVAL = "AWAITING_HUMAN_APPROVAL",
-  EXECUTED = "EXECUTED",
-  FAILED_RETRY = "FAILED_RETRY"
-}
+export type JobState =
+  | "IDLE"
+  | "INGESTING"
+  | "REASONING"
+  | "CLARIFYING"
+  | "NEEDS_SME_INPUT"
+  | "AWAITING_HUMAN_APPROVAL"
+  | "EXECUTED"
+  | "FAILED_RETRY";
 ```
 
 ### Allowed Flow
-`IDLE → INGESTING → REASONING`
-- `REASONING → CLARIFYING | NEEDS_SME_INPUT | AWAITING_HUMAN_APPROVAL | FAILED_RETRY`
-- `CLARIFYING → INGESTING | NEEDS_SME_INPUT`
-- `NEEDS_SME_INPUT → REASONING`
-- `AWAITING_HUMAN_APPROVAL → EXECUTED | FAILED_RETRY`
-- `FAILED_RETRY → INGESTING | REASONING`
+```
+IDLE → INGESTING → REASONING
+REASONING → CLARIFYING | NEEDS_SME_INPUT | AWAITING_HUMAN_APPROVAL | FAILED_RETRY
+CLARIFYING → INGESTING | NEEDS_SME_INPUT
+NEEDS_SME_INPUT → REASONING
+AWAITING_HUMAN_APPROVAL → EXECUTED | FAILED_RETRY
+FAILED_RETRY → INGESTING | REASONING
+```
 
-Invalid invariant: `CLARIFYING → EXECUTED`.
+**Invariant:** `CLARIFYING → EXECUTED` is always invalid.
 
 ## 3. Job
 ```ts
 export interface Job {
-  jobId: UUID;
-  businessId: string;
-  businessType: string;
+  job_id: UUID;
+  business_id: string;
+  business_type: string;
   state: JobState;
-  clarificationRound: number;
-  retryCount: number;
-  extractedFields: Record<string, unknown>;
-  missingRequiredFields: string[];
-  quoteId?: UUID | null;
-  errorMessage?: string | null;
-  createdAt: ISODateTime;
-  updatedAt: ISODateTime;
+  clarification_round: number;
+  retry_count: number;
+  extracted_fields: Record<string, unknown>;
+  missing_required_fields: string[];
+  messages: ChatMessage[];
+  quote: Quote | null;
+  error_message: string | null;
+  created_at: ISODateTime;
+  updated_at: ISODateTime;
 }
 ```
 
 ## 4. ChatMessage
 ```ts
 export type MessageSender = "client" | "agent" | "sme";
-export type MessageType = "general" | "clarification" | "quote" | "system";
+export type MessageType = "TEXT" | "CLARIFICATION" | "QUOTE" | "SYSTEM";
 
 export interface ChatMessage {
-  messageId: UUID;
-  jobId: UUID;
+  message_id: UUID;
+  job_id: UUID;
   sender: MessageSender;
-  messageType: MessageType;
+  message_type: MessageType;
   text: string;
-  createdAt: ISODateTime;
+  required_approval: boolean;
+  created_at: ISODateTime;
 }
 ```
 
+**Message type rules:**
+- `CLARIFICATION` — autonomous agent sends, `required_approval: false`
+- `QUOTE` — only after SME approval via `POST /jobs/:id/approve_quote`, `required_approval: true`
+- `TEXT` — client or SME messages
+- `SYSTEM` — internal state events
+
 ## 5. Quote
 ```ts
-export type QuoteStatus = "DRAFT" | "APPROVED" | "SENT";
+export type QuoteStatus = "draft" | "approved" | "SENT";
 
 export interface Quote {
-  quoteId: UUID;
-  jobId: UUID;
+  quote_id: UUID;
+  job_id: UUID;
   status: QuoteStatus;
-  lineItems: LineItem[];
+  line_items: LineItem[];
   contingencies: Contingency[];
   subtotal: number;
-  contingencyTotal: number;
+  contingency_total: number;
   total: number;
   currency: CurrencyCode;
-  validityDays: number;
-  terms: string;
+  validity_days: number;
+  payment_terms: string;
   assumptions: string[];
-  draftMessageToClient: string;
-  approvedBy?: string | null;
-  approvedAt?: ISODateTime | null;
-  createdAt: ISODateTime;
-  updatedAt: ISODateTime;
+  draft_message: string;
+  approved_by: string | null;
+  approved_at: ISODateTime | null;
+  created_at: ISODateTime;
+  updated_at: ISODateTime;
 }
 ```
 
 ## 6. LineItem
 ```ts
 export interface LineItem {
-  lineItemId: UUID;
-  description: string;
+  id: string;
+  name: string;
   quantity: number;
-  unitPrice: number;
-  subtotal: number;
-  metadata?: Record<string, unknown>;
+  unit_price: number;
+  total: number;
 }
 ```
-`subtotal = quantity × unitPrice`
+`total = quantity × unit_price`
 
 ## 7. Contingency
 ```ts
 export interface Contingency {
-  contingencyId: UUID;
+  id: string;
   label: string;
   amount: number;
-  reason: string;
-  metadata?: Record<string, unknown>;
+  rate: number;
 }
 ```
 
 ## 8. AuditEvent
 ```ts
 export type AuditEventType =
-  | "JOB_CREATED" | "MESSAGE_RECEIVED" | "STATE_TRANSITION"
-  | "TOOL_STARTED" | "TOOL_COMPLETED" | "TOOL_FAILED"
-  | "CLARIFICATION_SENT" | "SME_INPUT_SUBMITTED"
-  | "QUOTE_GENERATED" | "QUOTE_EDITED" | "QUOTE_APPROVED"
-  | "QUOTE_SENT" | "RETRY_STARTED" | "RETRY_FAILED";
+  | "JOB_CREATED"
+  | "MESSAGE_RECEIVED"
+  | "STATE_TRANSITION"
+  | "TOOL_STARTED"
+  | "TOOL_COMPLETED"
+  | "TOOL_FAILED"
+  | "CLARIFICATION_SENT"
+  | "SME_INPUT_SUBMITTED"
+  | "QUOTE_GENERATED"
+  | "QUOTE_EDITED"
+  | "QUOTE_APPROVED"
+  | "QUOTE_SENT"
+  | "RETRY_STARTED"
+  | "RETRY_FAILED";
 
 export interface AuditEvent {
-  eventId: UUID;
-  jobId: UUID;
-  eventType: AuditEventType;
+  event_id: UUID;
+  job_id: UUID;
+  event_type: AuditEventType;
   actor: "client" | "agent" | "sme" | "system";
-  fromState?: JobState;
-  toState?: JobState;
+  from_state?: JobState;
+  to_state?: JobState;
   metadata: Record<string, unknown>;
-  createdAt: ISODateTime;
+  created_at: ISODateTime;
 }
 ```
 
-# 9. Knowledge Base Schema
-Location: `knowledge_base/event_vendor.json`
+## 9. Knowledge Base Schema
+Location: `src/data/knowledge_base/{business_type}.json`
 
 ```ts
 export interface KnowledgeBaseField {
   name: string;
-  requiredForQuote: boolean;
+  required_for_quote: boolean;
   description: string;
-  extractionHints: string[];
-  validationRules?: {
+  extraction_hints: string[];
+  validation_rules?: {
     type?: "string" | "number" | "date" | "range";
     minimum?: number;
     maximum?: number;
   };
-  clarificationGuidance?: string;
+  clarification_guidance?: string;
 }
 
 export interface KnowledgeBase {
-  businessType: string;
-  requiredFields: KnowledgeBaseField[];
-  optionalFields: KnowledgeBaseField[];
-  businessRules: string[];
-  clarificationPolicy: {
-    maxAutonomousRounds: number;
-    maxQuestionsPerRound: number;
+  business_type: string;
+  required_fields: KnowledgeBaseField[];
+  optional_fields: KnowledgeBaseField[];
+  business_rules: string[];
+  clarification_policy: {
+    max_autonomous_rounds: number;
+    max_questions_per_round: number;
   };
 }
 ```
 
-Example:
-```json
-{
-  "businessType": "event_vendor",
-  "requiredFields": [
-    {
-      "name": "eventType",
-      "requiredForQuote": true,
-      "description": "The type of event.",
-      "extractionHints": ["birthday", "wedding", "corporate event"],
-      "clarificationGuidance": "Ask what type of event is being planned."
-    }
-  ],
-  "optionalFields": [],
-  "businessRules": [],
-  "clarificationPolicy": {
-    "maxAutonomousRounds": 2,
-    "maxQuestionsPerRound": 5
-  }
-}
-```
-
-# 10. Price Catalog Schema
-Location: `price_catalog/event_vendor.json`
+## 10. Price Catalog Schema
+Location: `src/data/price_catalog/{business_type}.json`
 
 ```ts
 export interface CatalogLineItem {
   id: string;
   description: string;
   unit: string;
-  unitPrice: number;
-  applicableWhen?: Record<string, unknown>;
+  unit_price: number;
+  applicable_when?: Record<string, unknown>;
 }
 
 export interface CatalogContingency {
@@ -206,128 +200,115 @@ export interface CatalogContingency {
 }
 
 export interface PriceCatalog {
-  businessType: string;
+  business_type: string;
   currency: CurrencyCode;
-  lineItems: CatalogLineItem[];
+  line_items: CatalogLineItem[];
   contingencies: CatalogContingency[];
-  quoteTerms: {
-    validityDays: number;
-    defaultPaymentTerms: string;
+  quote_terms: {
+    validity_days: number;
+    default_payment_terms: string;
   };
-  feasibilityRules?: {
-    minimumBudget?: number;
-    maximumGuestCount?: number;
+  feasibility_rules?: {
+    minimum_budget?: number;
+    maximum_guest_count?: number;
     warnings?: string[];
   };
 }
 ```
 
-# 11. Tool Payload Contracts
+## 11. Tool Payload Contracts (V2)
 
-## IngestChatMessage
-```ts
-export interface IngestChatMessageInput {
-  jobId?: UUID;
-  businessId: string;
-  businessType: string;
-  message: { sender: "client"; text: string };
-}
-export interface IngestChatMessageOutput {
-  jobId: UUID;
-  messageId: UUID;
-  state: JobState.INGESTING;
-}
-```
+All tools are **pure capability tools** — they do not call the LLM. The Strands SDK manages all model interactions.
 
-## ParseClientBrief
+### fetch_knowledge_base
 ```ts
-export interface ParseClientBriefInput {
-  jobId: UUID;
-  businessType: string;
-  messages: ChatMessage[];
-  existingFields: Record<string, unknown>;
+export interface FetchKnowledgeBaseInput {
+  business_type: "caterer" | "tailor" | "event_vendor" | "photographer" | "event_planner" | "equipment_rental";
 }
-export interface ParseClientBriefOutput {
-  jobId: UUID;
-  extractedFields: Record<string, unknown>;
-  missingRequiredFields: string[];
+
+export interface FetchKnowledgeBaseOutput {
+  knowledge_base: KnowledgeBase;
   status: "SUCCESS" | "FAILED_RETRY";
-  error?: string | null;
+  error: string | null;
 }
 ```
-Rules: use the relevant knowledge base; merge multi-turn information; never invent missing values; later explicit corrections override earlier values.
 
-## GenerateClarifyingQuestions
+### fetch_price_catalog
 ```ts
-export interface GenerateClarifyingQuestionsInput {
-  jobId: UUID;
-  businessType: string;
-  missingRequiredFields: string[];
-  clarificationRound: number;
+export interface FetchPriceCatalogInput {
+  business_type: "caterer" | "tailor" | "event_vendor" | "photographer" | "event_planner" | "equipment_rental";
 }
-export interface GenerateClarifyingQuestionsOutput {
-  jobId: UUID;
-  questions: string[];
-  draftMessageToClient: string;
-  nextState: JobState.CLARIFYING | JobState.NEEDS_SME_INPUT;
+
+export interface FetchPriceCatalogOutput {
+  price_catalog: PriceCatalog;
   status: "SUCCESS" | "FAILED_RETRY";
-  error?: string | null;
+  error: string | null;
 }
 ```
-Rules: 1–5 questions; maximum two autonomous rounds; round 3 is prohibited; unresolved cases route to `NEEDS_SME_INPUT`.
 
-## ComputeQuote
+### update_job_state
 ```ts
-export interface ComputeQuoteInput {
-  jobId: UUID;
-  businessType: string;
-  brief: Record<string, unknown>;
-  knowledgeBase: KnowledgeBase;
-  priceCatalog: PriceCatalog;
+export interface UpdateJobStateInput {
+  job_id: UUID;
+  extracted_fields?: Record<string, unknown>;
+  missing_required_fields?: string[];
+  clarification_round?: number;
+  new_state: JobState;
+  quote?: {
+    line_items: Array<{ name: string; quantity: number; unit_price: number; total: number }>;
+    contingencies: Array<{ label: string; amount: number; rate?: number }>;
+    subtotal: number;
+    contingency_total: number;
+    total: number;
+    currency: CurrencyCode;
+    validity_period_days: number;
+    draft_message_to_client: string;
+  };
+  error_message?: string;
 }
-export interface ComputeQuoteOutput {
-  jobId: UUID;
-  quote?: Quote;
-  feasibilityWarning?: string;
-  nextState: JobState.AWAITING_HUMAN_APPROVAL | JobState.FAILED_RETRY;
+
+export interface UpdateJobStateOutput {
+  job_id: UUID;
+  new_state: JobState;
+  quote_id: string | null;
   status: "SUCCESS" | "FAILED_RETRY";
-  error?: string | null;
+  error: string | null;
 }
 ```
-Rules: prices come from configured data/deterministic logic; missing prices are never invented; infeasible requests produce warning/failure; valid drafts move to `AWAITING_HUMAN_APPROVAL`.
 
-## SimulateSendMessage
+### simulate_send_message
 ```ts
 export interface SimulateSendMessageInput {
-  jobId: UUID;
-  messageType: "clarification" | "quote";
-  draftMessageToClient: string;
-  sender: "agent" | "sme";
-  requiredApproval: boolean;
-  approvalConfirmed?: boolean;
+  job_id: UUID;
+  message_type: "clarifying_questions" | "general";
+  draft_message_to_client: string;
+  sender: "business";
+  required_approval: false; // Quotes are NEVER sent through this tool
 }
+
 export interface SimulateSendMessageOutput {
-  jobId: UUID;
-  messageId: UUID;
-  sentAt: ISODateTime;
+  send_id: string;
+  job_id: UUID;
   status: "SUCCESS" | "FAILED_RETRY";
-  error?: string | null;
+  sent_at: ISODateTime;
+  error: string | null;
 }
 ```
-Clarification messages require no approval. Quote messages require `requiredApproval = true` and `approvalConfirmed = true`.
 
-# 12. Entity Relationship Map
-```text
+> **Architectural invariant:** Quotes are NEVER sent via `simulate_send_message`. They are saved via `update_job_state` and sent only after explicit SME approval through `POST /jobs/:id/approve_quote`.
+
+## 12. Entity Relationship Map
+```
 Job
 ├── ChatMessage[]
-├── extractedFields
-├── missingRequiredFields
-├── Quote
+├── extracted_fields: Record<string, unknown>
+├── missing_required_fields: string[]
+├── Quote (null until AWAITING_HUMAN_APPROVAL)
 │   ├── LineItem[]
 │   └── Contingency[]
-└── AuditEvent[]
+└── AuditEvent[] (separate in-memory store)
 
-Business Type
-├── knowledge_base/<businessType>.json
-└── price_catalog/<businessType>.json
+Business Type Config
+├── src/data/knowledge_base/{business_type}.json
+└── src/data/price_catalog/{business_type}.json
 ```

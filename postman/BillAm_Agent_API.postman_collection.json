@@ -74,8 +74,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
             },
             "description": "Initializes a new job session for the wedding scenario."
           },
@@ -97,8 +101,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_1_job_id}}/messages",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_1_job_id}}", "messages"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_1_job_id}}",
+                "messages"
+              ]
             },
             "description": "Sends full brief with all 5 required fields. Agent should transition directly to AWAITING_HUMAN_APPROVAL."
           },
@@ -111,8 +121,21 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_1_job_id}}/quote",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_1_job_id}}", "quote"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_1_job_id}}",
+                "quote"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
             },
             "description": "Inspects the generated draft quote (expecting real price calculation around ₦1,926,650)."
           },
@@ -134,8 +157,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_1_job_id}}/approve_quote",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_1_job_id}}", "approve_quote"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_1_job_id}}",
+                "approve_quote"
+              ]
             },
             "description": "SME approves quote. Job transitions to EXECUTED and quote status becomes SENT."
           },
@@ -179,8 +208,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
             }
           },
           "response": []
@@ -201,8 +234,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_2_job_id}}/messages",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_2_job_id}}", "messages"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_2_job_id}}",
+                "messages"
+              ]
             },
             "description": "Agent should detect missing guest_count and transition to CLARIFYING with questions."
           },
@@ -215,8 +254,20 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_2_job_id}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_2_job_id}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_2_job_id}}"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
             },
             "description": "Verifies state is CLARIFYING and clarification questions were appended."
           },
@@ -238,8 +289,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_2_job_id}}/messages",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_2_job_id}}", "messages"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_2_job_id}}",
+                "messages"
+              ]
             },
             "description": "Resolves the missing field. Agent should now transition to AWAITING_HUMAN_APPROVAL."
           },
@@ -252,8 +309,21 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_2_job_id}}/quote",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_2_job_id}}", "quote"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_2_job_id}}",
+                "quote"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
             },
             "description": "Verifies quote was generated for 40 guests."
           },
@@ -297,8 +367,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
             }
           },
           "response": []
@@ -319,8 +393,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_3_job_id}}/messages",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_3_job_id}}", "messages"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_3_job_id}}",
+                "messages"
+              ]
             }
           },
           "response": []
@@ -332,8 +412,21 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_3_job_id}}/quote",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_3_job_id}}", "quote"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_3_job_id}}",
+                "quote"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
             },
             "description": "Inspects initial quote total (expecting ~₦349,170)."
           },
@@ -355,8 +448,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_3_job_id}}/quote",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_3_job_id}}", "quote"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_3_job_id}}",
+                "quote"
+              ]
             },
             "description": "SME modifies pricing before approving."
           },
@@ -378,8 +477,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_3_job_id}}/approve_quote",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_3_job_id}}", "approve_quote"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_3_job_id}}",
+                "approve_quote"
+              ]
             }
           },
           "response": []
@@ -422,8 +527,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
             }
           },
           "response": []
@@ -444,8 +553,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_4_job_id}}/messages",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_4_job_id}}", "messages"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_4_job_id}}",
+                "messages"
+              ]
             },
             "description": "Agent must detect unrealistic scope vs budget, refuse quote generation, and transition to FAILED_RETRY."
           },
@@ -458,8 +573,20 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/jobs/{{scenario_4_job_id}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{scenario_4_job_id}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_4_job_id}}"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
             },
             "description": "Verifies state is FAILED_RETRY, quote is null, and error_message explains the budget/scope mismatch."
           },
@@ -478,8 +605,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["health"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
             }
           },
           "response": []
@@ -517,8 +648,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
             }
           },
           "response": []
@@ -539,8 +674,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{job_id}}/messages",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{job_id}}", "messages"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "messages"
+              ]
             }
           },
           "response": []
@@ -552,8 +693,20 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/jobs/{{job_id}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{job_id}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
             }
           },
           "response": []
@@ -565,8 +718,21 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/jobs/{{job_id}}/quote",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{job_id}}", "quote"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "quote"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
             }
           },
           "response": []
@@ -587,8 +753,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{job_id}}/quote",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{job_id}}", "quote"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "quote"
+              ]
             }
           },
           "response": []
@@ -609,8 +781,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{job_id}}/approve_quote",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{job_id}}", "approve_quote"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "approve_quote"
+              ]
             }
           },
           "response": []
@@ -622,8 +800,21 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/jobs/{{job_id}}/missing_fields",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{job_id}}", "missing_fields"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "missing_fields"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
             }
           },
           "response": []
@@ -644,8 +835,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/jobs/{{job_id}}/manual_input",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{job_id}}", "manual_input"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "manual_input"
+              ]
             }
           },
           "response": []
@@ -657,11 +854,121 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/jobs/{{job_id}}/retry",
-              "host": ["{{baseUrl}}"],
-              "path": ["jobs", "{{job_id}}", "retry"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "retry"
+              ]
             }
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "📚 Knowledge Base",
+      "description": "Endpoints for managing the Knowledge Base entries",
+      "item": [
+        {
+          "name": "List Knowledge Entries",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/knowledge?business_id=biz-event-decoration",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "knowledge"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Knowledge Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"biz-event-decoration\",\n  \"name\": \"New Menu\",\n  \"source_type\": \"Pricing\",\n  \"input_method\": \"manual\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/knowledge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "knowledge"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗓️ Availability",
+      "description": "Endpoints for managing Availability blocked dates",
+      "item": [
+        {
+          "name": "List Availability Dates",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/availability?business_id=biz-event-decoration",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "availability"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Blocked Date",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"biz-event-decoration\",\n  \"date\": \"2026-12-25\",\n  \"status\": \"UNAVAILABLE\",\n  \"reason\": \"Christmas\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/availability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "availability"
+              ]
+            }
+          }
         }
       ]
     }

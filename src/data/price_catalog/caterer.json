@@ -1,0 +1,60 @@
+{
+  "business_type": "caterer",
+  "currency": "NGN",
+  "version": "1.0",
+  "description": "Mock price catalog for catering SME demo.",
+  "pricing_tiers": { "tiers": ["lean", "standard", "premium"] },
+  "line_items": [
+    {
+      "item_id": "buffet_per_head",
+      "label": "Buffet (Per Guest)",
+      "applies_when": "meal_type == buffet",
+      "pricing_basis": "per_guest",
+      "unit_price": { "lean": 3500, "standard": 6000, "premium": 12000 }
+    },
+    {
+      "item_id": "plated_per_head",
+      "label": "Plated Service (Per Guest)",
+      "applies_when": "meal_type == plated",
+      "pricing_basis": "per_guest",
+      "unit_price": { "lean": 5000, "standard": 9000, "premium": 18000 }
+    },
+    {
+      "item_id": "small_chops",
+      "label": "Small Chops (Per Guest)",
+      "applies_when": "meal_type == small_chops_only OR meal_type == cocktail",
+      "pricing_basis": "per_guest",
+      "unit_price": { "lean": 1500, "standard": 2500, "premium": 5000 }
+    },
+    {
+      "item_id": "drinks_package",
+      "label": "Drinks Package (Per Guest)",
+      "applies_when": "drinks_included == true",
+      "pricing_basis": "per_guest",
+      "unit_price": { "lean": 1000, "standard": 2000, "premium": 4000 }
+    },
+    {
+      "item_id": "serving_staff",
+      "label": "Serving Staff",
+      "applies_when": "always",
+      "pricing_basis": "per_25_guests",
+      "unit_price": { "lean": 15000, "standard": 20000, "premium": 30000 }
+    }
+  ],
+  "contingencies": [
+    {
+      "contingency_id": "transport_logistics",
+      "label": "Transport & Logistics",
+      "value": { "type": "percentage_of_subtotal", "amount": 0.08 }
+    },
+    {
+      "contingency_id": "fuel_price_buffer",
+      "label": "Fuel/Fluctuation Buffer",
+      "value": { "type": "percentage_of_subtotal", "amount": 0.05 }
+    }
+  ],
+  "quote_terms": {
+    "validity_period_days": 5,
+    "default_payment_terms": "50% deposit to confirm booking, balance due 2 days before the event."
+  }
+}

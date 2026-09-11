@@ -10,8 +10,8 @@ function logEvent(
   eventType: AuditEvent["type"],
   actor: string,
   details?: Record<string, any>,
-  fromState?: JobState,
-  toState?: JobState
+  _fromState?: JobState,
+  _toState?: JobState
 ): AuditEvent {
   const event: AuditEvent = {
     id: randomUUID(),

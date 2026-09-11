@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "BillAm Agent API",
-    "version": "1.0.0",
-    "description": "Job-oriented REST API for BillAm Agent — autonomous SME quoting & clarification engine."
+    "version": "2.0.0",
+    "description": "Job-oriented REST API for BillAm Agent — autonomous SME quoting & clarification engine. Powered by Strands Agents SDK + Claude Sonnet 4.5."
   },
   "servers": [
     {
@@ -24,9 +24,18 @@
       }
     },
     "/jobs": {
+      "get": {
+        "summary": "List All Jobs",
+        "description": "Returns all jobs in the in-memory store. Useful for the SME dashboard overview page.",
+        "responses": {
+          "200": {
+            "description": "Array of all job objects"
+          }
+        }
+      },
       "post": {
         "summary": "Create Job",
-        "description": "Creates a new job session for a specific business.",
+        "description": "Creates a new job session for a specific business. Returns the job in IDLE state.",
         "requestBody": {
           "required": true,
           "content": {
@@ -41,7 +50,7 @@
                   },
                   "business_type": {
                     "type": "string",
-                    "enum": ["caterer", "tailor", "event_vendor"],
+                    "enum": ["caterer", "tailor", "event_vendor", "photographer", "event_planner", "equipment_rental"],
                     "example": "event_vendor"
                   }
                 }
@@ -51,7 +60,7 @@
         },
         "responses": {
           "201": {
-            "description": "Job created successfully"
+            "description": "Job created successfully in IDLE state"
           },
           "400": {
             "description": "Validation error"
@@ -62,18 +71,18 @@
     "/jobs/{id}": {
       "get": {
         "summary": "Get Job Details",
-        "description": "Retrieves the full job object, state, messages, and extracted fields.",
+        "description": "Retrieves the full job object including state, messages, extracted fields, and quote.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "schema": { "type": "string" },
-            "description": "Job ID UUID"
+            "description": "Job ID"
           }
         ],
         "responses": {
-          "200": { "description": "Job details retrieved" },
+          "200": { "description": "Full job object returned" },
           "404": { "description": "Job not found" }
         }
       }
@@ -81,7 +90,7 @@
     "/jobs/{id}/messages": {
       "post": {
         "summary": "Send Client Message",
-        "description": "Appends a new client message and triggers the agent reasoning loop (INGESTING -> REASONING -> CLARIFYING / AWAITING_HUMAN_APPROVAL / NEEDS_SME_INPUT).",
+        "description": "Appends a client message to the job and triggers the Strands Agent reasoning loop. The agent autonomously extracts brief data, generates clarifying questions, or produces a quote draft. Valid inbound states: IDLE, CLARIFYING, FAILED_RETRY. SME messages can be sent at any state.",
         "parameters": [
           {
             "name": "id",
@@ -100,12 +109,18 @@
                 "properties": {
                   "message_text": {
                     "type": "string",
-                    "example": "Good day, I need decor and lighting for a 150-guest wedding in Lekki on November 20th. My budget is around 2 million Naira."
+                    "example": "Good afternoon! I am planning my daughter's wedding, we are expecting about 150 guests. It will hold on the 14th of next month, outdoors at our family compound in Lekki. Budget is around 3 million naira."
                   },
                   "received_at": {
                     "type": "string",
                     "format": "date-time",
-                    "example": "2026-09-01T10:00:00.000Z"
+                    "example": "2026-09-02T12:00:00.000Z"
+                  },
+                  "sender": {
+                    "type": "string",
+                    "enum": ["client", "sme"],
+                    "default": "client",
+                    "description": "Defaults to client. Use 'sme' for SME-injected messages that should not trigger agent loop."
                   }
                 }
               }
@@ -114,16 +129,16 @@
         },
         "responses": {
           "200": {
-            "description": "Agent loop completed and returns updated job state"
+            "description": "Agent loop completed. Returns updated job. Possible outcome states: CLARIFYING, NEEDS_SME_INPUT, AWAITING_HUMAN_APPROVAL, FAILED_RETRY"
           },
-          "409": { "description": "Invalid state transition" }
+          "409": { "description": "Invalid state — cannot receive messages in current state" }
         }
       }
     },
     "/jobs/{id}/quote": {
       "get": {
         "summary": "Get Draft Quote",
-        "description": "Returns the generated draft quote (line items, contingencies, totals).",
+        "description": "Returns the agent-generated draft quote (line items, contingencies, totals). Only available when a quote exists.",
         "parameters": [
           {
             "name": "id",
@@ -133,13 +148,13 @@
           }
         ],
         "responses": {
-          "200": { "description": "Draft quote retrieved" },
-          "404": { "description": "Quote not available" }
+          "200": { "description": "Draft quote returned with full line items and totals" },
+          "404": { "description": "No quote available for this job" }
         }
       },
       "patch": {
         "summary": "Edit Draft Quote",
-        "description": "Allows the SME owner to modify line item quantities, prices, or notes before approving.",
+        "description": "Allows the SME to modify line items and notes before approving. Only valid in AWAITING_HUMAN_APPROVAL state. Does not send the quote.",
         "parameters": [
           {
             "name": "id",
@@ -165,11 +180,14 @@
                         "unit_price": { "type": "number" },
                         "total": { "type": "number" }
                       }
-                    }
+                    },
+                    "example": [
+                      { "name": "Venue Decor", "quantity": 1, "unit_price": 450000, "total": 450000 }
+                    ]
                   },
                   "notes": {
                     "type": "string",
-                    "example": "Discount applied after SME phone call"
+                    "example": "Applied 10% corporate discount after SME review"
                   }
                 }
               }
@@ -177,15 +195,15 @@
           }
         },
         "responses": {
-          "200": { "description": "Quote updated successfully" },
-          "409": { "description": "State must be AWAITING_HUMAN_APPROVAL" }
+          "200": { "description": "Quote updated. Subtotal and total recalculated." },
+          "409": { "description": "State must be AWAITING_HUMAN_APPROVAL to edit quote" }
         }
       }
     },
     "/jobs/{id}/approve_quote": {
       "post": {
         "summary": "Approve and Send Quote",
-        "description": "SME owner explicitly approves the quote. Sends quote to simulated chat and transitions state to EXECUTED.",
+        "description": "The only action that can send a quote to the simulated client chat. SME must explicitly call this endpoint. Transitions job to EXECUTED.",
         "parameters": [
           {
             "name": "id",
@@ -212,15 +230,15 @@
           }
         },
         "responses": {
-          "200": { "description": "Quote approved and dispatched" },
-          "409": { "description": "Approval not allowed in current state" }
+          "200": { "description": "Quote approved and sent. State: EXECUTED, quote status: SENT." },
+          "409": { "description": "Approval not allowed — job must be in AWAITING_HUMAN_APPROVAL" }
         }
       }
     },
     "/jobs/{id}/missing_fields": {
       "get": {
         "summary": "Get Missing Fields",
-        "description": "Retrieves missing required fields when job state is NEEDS_SME_INPUT.",
+        "description": "Returns the list of unresolved required fields. Intended for use when job is in NEEDS_SME_INPUT state.",
         "parameters": [
           {
             "name": "id",
@@ -230,14 +248,14 @@
           }
         ],
         "responses": {
-          "200": { "description": "Missing fields list and summary returned" }
+          "200": { "description": "Missing fields list, summary, and clarification round returned" }
         }
       }
     },
     "/jobs/{id}/manual_input": {
       "post": {
         "summary": "Submit Manual SME Input",
-        "description": "Allows SME to manually supply missing brief values and re-run agent reasoning.",
+        "description": "Allows the SME to supply unresolved required field values and re-trigger the agent reasoning loop. Only valid in NEEDS_SME_INPUT state.",
         "parameters": [
           {
             "name": "id",
@@ -271,16 +289,15 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Manual input merged and agent loop re-executed"
-          }
+          "200": { "description": "Manual input accepted. Agent loop re-executed." },
+          "409": { "description": "State must be NEEDS_SME_INPUT to submit manual input" }
         }
       }
     },
     "/jobs/{id}/retry": {
       "post": {
         "summary": "Retry Failed Job",
-        "description": "Retries execution from FAILED_RETRY state.",
+        "description": "Re-invokes the agent loop for a job in FAILED_RETRY state. Preserves existing messages, extracted fields, and clarification history.",
         "parameters": [
           {
             "name": "id",
@@ -290,7 +307,8 @@
           }
         ],
         "responses": {
-          "200": { "description": "Retry started" }
+          "200": { "description": "Retry initiated. State transitions to REASONING." },
+          "409": { "description": "State must be FAILED_RETRY to retry" }
         }
       }
     }

@@ -26,7 +26,6 @@ import {
   approveQuoteSchema,
   manualInputSchema,
 } from "./validators";
-import { simulateSendMessageTool } from "../agent/tools/simulateSendMessage";
 import type { ChatMessage, LineItem } from "../types/Job";
 
 import { runAgentLoop } from "../agent/orchestration/agentLoop";
@@ -123,7 +122,7 @@ export async function postMessageHandler(
   }
 
   // 2. Transition to INGESTING
-  const ingesting = transitionJob(job.state, "INGESTING");
+  transitionJob(job.state, "INGESTING");
   updateJobState(job.job_id, "INGESTING");
   logStateTransition(job.job_id, job.state, "INGESTING");
   // 3. Invoke the agent loop
@@ -156,8 +155,9 @@ export async function listJobsHandler(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const jobs = getAllJobs();
-  res.status(200).json({ success: true, data: jobs });
+  const businessId = req.query.business_id as string | undefined;
+  const jobs = getAllJobs(businessId);
+  res.status(200).json({ success: true, data: { jobs } });
 }
 
 /**
@@ -305,15 +305,7 @@ export async function approveQuoteHandler(
   }
   // 1. Record approval
   logQuoteApproved(job.job_id, job.quote.total);
-  // 2. Simulate sending the quote via the tool
   const sentAt = new Date().toISOString();
-  await simulateSendMessageTool.invoke({
-    job_id: job.job_id,
-    message_type: "quote",
-    draft_message_to_client: job.quote.draft_message ?? "Your quote is ready.",
-    sender: "business",
-    required_approval: true,
-  });
   // 3. Update quote status and append to messages
   job.quote.status = "sent";
   const quoteMessage: ChatMessage = {
@@ -412,7 +404,7 @@ export async function manualInputHandler(
     });
     return;
   }
-  const { supplied_fields, source } = parsed.data;
+  const { supplied_fields } = parsed.data;
   // 1. Merge SME-supplied fields
   mergeExtractedFields(job.job_id, supplied_fields);
   // 2. Log the SME input event

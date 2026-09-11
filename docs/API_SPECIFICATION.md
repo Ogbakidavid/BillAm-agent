@@ -81,7 +81,6 @@ Suggested error codes:
 - `QUOTE_NOT_AVAILABLE`
 - `APPROVAL_REQUIRED`
 - `PRICE_DATA_UNAVAILABLE`
-- `LLM_PROVIDER_ERROR`
 - `RETRY_NOT_ALLOWED`
 - `INTERNAL_ERROR`
 
@@ -164,12 +163,10 @@ This is the primary entry point for simulated client chat input.
 The endpoint should:
 
 1. validate the job;
-2. call `ingest_chat_message`;
-3. append the client message;
-4. transition to `INGESTING`;
-5. invoke the agent flow;
-6. parse and merge the brief;
-7. determine the next valid state.
+2. append the client message;
+3. transition to `INGESTING`;
+4. parse and merge the brief;
+5. determine the next valid state.
 
 Possible outcomes:
 
@@ -218,6 +215,39 @@ A quote in this state has **not** been sent to the client chat.
 ---
 
 # 7. Get Job
+
+## `GET /jobs`
+
+Returns a list of all jobs.
+
+### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobs": [
+      {
+        "job_id": "job_123",
+        "state": "AWAITING_HUMAN_APPROVAL",
+        "clarification_round": 0,
+        "messages": [],
+        "extracted_fields": {
+          "event_type": "wedding",
+          "guest_count": 200,
+          "event_date": "2026-09-14",
+          "venue_location": "Lekki",
+          "budget_range": "~3000000 NGN"
+        },
+        "missing_required_fields": [],
+        "quote": {
+          "status": "DRAFT"
+        }
+      }
+    ]
+  }
+}
+```
 
 ## `GET /jobs/:id`
 

@@ -1,13 +1,9 @@
-import { parseClientBriefTool } from "../tools/parseClientBrief";
-import { generateClarifyingQuestionsTool } from "../tools/generateClarifyingQuestions";
-import { computeQuoteTool } from "../tools/computeQuote";
-import { simulateSendMessageTool } from "../tools/simulateSendMessage";
 import * as JobStore from "../../state/JobStore";
 import * as AuditLog from "../../state/auditLog";
 import { transitionJob } from "../../state/stateMachine";
 import { Job } from "../../types/Job";
-
-const MAX_CLARIFICATION_ROUNDS = 2;
+import { createBillamAgent } from "./agent";
+import { randomUUID } from "crypto";
 
 function moveState(job: Job, newState: Job["state"]): void {
   const result = transitionJob(job.state, newState);
@@ -20,146 +16,66 @@ function moveState(job: Job, newState: Job["state"]): void {
 }
 
 export async function runAgentLoop(jobId: string): Promise<Job> {
-  const job = JobStore.getJob(jobId);
+  let job = JobStore.getJob(jobId);
   if (!job) {
     throw new Error(`Job not found: ${jobId}`);
   }
 
   try {
-    if (job.state === "IDLE") {
-      moveState(job, "INGESTING");
+    if (job.state === "IDLE" || job.state === "INGESTING") {
+      moveState(job, "REASONING");
     }
-    moveState(job, "REASONING");
 
-    const parseResult = await parseClientBriefTool.invoke({
-      job_id: job.job_id,
-      message_text: job.messages[job.messages.length - 1].text,
-      business_type: job.business_type,
-      existing_fields: job.extracted_fields,
+    const lastMessage = job.messages[job.messages.length - 1];
+
+    const prompt = `
+Please process this job according to the SOP.
+
+job_id: ${job.job_id}
+business_type: ${job.business_type}
+clarification_round: ${job.clarification_round}
+
+existing_fields: ${JSON.stringify(job.extracted_fields, null, 2)}
+
+client_message: "${lastMessage ? lastMessage.text : ""}"
+    `.trim();
+
+    // Create a fresh agent for this specific job execution
+    const agent = createBillamAgent(jobId);
+
+    // Invoke the autonomous Strands Agent with limits
+    await agent.invoke(prompt, {
+      limits: { turns: 10 }
     });
 
-    if (parseResult.status !== "SUCCESS") {
-      moveState(job, "FAILED_RETRY");
-      JobStore.updateMissingFields(job.job_id, job.missing_required_fields);
-      job.error_message = parseResult.error;
-      return job;
+    const updatedJob = JobStore.getJob(jobId);
+    if (!updatedJob) {
+      throw new Error(`Job mysteriously vanished from store: ${jobId}`);
     }
 
-    JobStore.mergeExtractedFields(job.job_id, parseResult.extracted_fields);
-    JobStore.updateMissingFields(
-      job.job_id,
-      parseResult.missing_required_fields,
-    );
-    job.extracted_fields = parseResult.extracted_fields;
-    job.missing_required_fields = parseResult.missing_required_fields;
+    return updatedJob;
 
-    const briefComplete = job.missing_required_fields.length === 0;
-
-    if (briefComplete) {
-      return await handleComputeQuote(job);
-    }
-
-    const nextRound = job.clarification_round + 1;
-
-    if (nextRound > MAX_CLARIFICATION_ROUNDS) {
-      moveState(job, "NEEDS_SME_INPUT");
-      return job;
-    }
-
-    return await handleClarification(job, nextRound);
   } catch (err) {
+    job = JobStore.getJob(jobId) || job;
     moveState(job, "FAILED_RETRY");
-    job.error_message = err instanceof Error ? err.message : String(err);
-    return job;
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    job.error_message = errorMsg;
+    
+    console.error(`[AgentLoop] Job ${job.job_id} encountered an error and entered FAILED_RETRY state:`, errorMsg);
+    
+    JobStore.appendMessage(job.job_id, {
+      message_id: randomUUID(),
+      job_id: job.job_id,
+      sender: "agent",
+      message_type: "TEXT",
+      text: "I apologize, but I encountered a technical issue while processing your request. Please hold on while our team looks into this.",
+      required_approval: false,
+      created_at: new Date().toISOString(),
+    });
+
+    JobStore.updateJobState(job.job_id, "FAILED_RETRY");
+    return JobStore.getJob(jobId) || job;
   }
-}
-
-async function handleClarification(job: Job, round: number): Promise<Job> {
-  const clarifyResult = await generateClarifyingQuestionsTool.invoke({
-    job_id: job.job_id,
-    missing_required_fields: job.missing_required_fields,
-    business_type: job.business_type,
-    clarification_round: round,
-  });
-
-  if (clarifyResult.status !== "SUCCESS") {
-    moveState(job, "FAILED_RETRY");
-    job.error_message = clarifyResult.error;
-    return job;
-  }
-
-  await simulateSendMessageTool.invoke({
-    job_id: job.job_id,
-    message_type: "clarifying_questions",
-    draft_message_to_client: clarifyResult.draft_message_to_client,
-    sender: "business",
-    required_approval: false,
-  });
-
-  // simulateSendMessageTool is still a stub and doesn't persist to the
-  // transcript itself — append it here, same pattern jobs.handlers.ts
-  // uses for the quote-approval path.
-  JobStore.appendMessage(job.job_id, {
-    message_id: `msg-${Date.now()}`,
-    job_id: job.job_id,
-    sender: "agent",
-    message_type: "CLARIFICATION",
-    text: clarifyResult.draft_message_to_client,
-    required_approval: false,
-    created_at: new Date().toISOString(),
-  });
-
-  AuditLog.logClarificationSent(job.job_id, clarifyResult.questions, round);
-  job.clarification_round = round;
-
-  moveState(job, "CLARIFYING");
-  return job;
-}
-
-async function handleComputeQuote(job: Job): Promise<Job> {
-  const quoteResult = await computeQuoteTool.invoke({
-    job_id: job.job_id,
-    structured_brief: job.extracted_fields,
-    business_type: job.business_type,
-  });
-
-  if (quoteResult.status !== "SUCCESS") {
-    moveState(job, "FAILED_RETRY");
-    job.error_message = quoteResult.error;
-    return job;
-  }
-
-  // Tool output uses {label, amount}; Job.ts's Quote type expects {name, total}.
-  job.quote = {
-    id: `q-${Date.now()}`,
-    job_id: job.job_id,
-    status: "draft",
-    line_items: quoteResult.line_items.map((item) => ({
-      id: `li-${Date.now()}-${Math.random()}`,
-      name: item.label,
-      quantity: 1,
-      unit_price: item.amount,
-      total: item.amount,
-    })),
-    contingencies: quoteResult.contingencies.map((c) => ({
-      id: `c-${Date.now()}-${Math.random()}`,
-      label: c.label,
-      rate: null,
-      amount: c.amount,
-    })),
-    subtotal: quoteResult.total_amount,
-    total: quoteResult.total_amount,
-    currency: "NGN",
-    validity_days: quoteResult.validity_period_days,
-    payment_terms: "",
-    assumptions: [],
-    draft_message: quoteResult.draft_message_to_client,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  moveState(job, "AWAITING_HUMAN_APPROVAL");
-  return job;
 }
 
 export function handleClientReply(jobId: string): void {

@@ -1,62 +1,67 @@
 /**
  * simulateSendMessage.ts
- * Appends autonomous clarifications or approved quotes to the simulated chat and audit log
+ * Appends autonomous clarifications to the job chat transcript and audit log.
+ *
+ * CRITICAL ARCHITECTURAL INVARIANTS:
+ * - Clarifying questions (required_approval: false) are sent autonomously to the client.
+ * - Quotes (message_type: "quote") MUST NEVER be sent through this tool.
+ *   Quotes are saved via update_job_state and sent only after SME approval
+ *   via the POST /jobs/:id/approve_quote endpoint.
  */
 
 import { tool } from "@strands-agents/sdk";
 import { z } from "zod";
+import * as JobStore from "../../state/JobStore";
+import * as AuditLog from "../../state/auditLog";
 import {
   SimulateSendMessageInput,
   SimulateSendMessageOutput,
 } from "../../types/ToolContracts";
 
-// CRITICAL ARCHITECTURAL INVARIANT: Quotes require mandatory SME approval (required_approval: true)
 const simulateSendMessageInputSchema = z
   .object({
     job_id: z.string().min(1, "Job ID is required"),
-    message_type: z.enum(["clarifying_questions", "quote", "general"]),
+    message_type: z.enum(["clarifying_questions", "general"]),
     draft_message_to_client: z.string().min(1, "Draft message cannot be empty"),
-    sender: z.enum(["client", "business"]),
-    required_approval: z.boolean(),
-  })
-  .refine(
-    (data) => {
-      if (data.message_type === "quote") {
-        return data.required_approval === true;
-      }
-      return true;
-    },
-    {
-      message: "Quote messages MUST have required_approval set to true. Bypassing human SME approval is illegal.",
-      path: ["required_approval"],
-    }
-  );
+    sender: z.literal("business"),
+    required_approval: z.literal(false),
+  });
 
-/**
- * simulate_send_message
- * Strands Tool definition for appending autonomous clarifications or approved quotes to simulated chat & audit log.
- *
- * CRITICAL ARCHITECTURAL INVARIANT:
- * - Clarifying questions (required_approval: false) are sent autonomously to the client.
- * - Quotes (required_approval: true) ONLY send after explicit SME owner approval via POST /jobs/:id/approve_quote.
- */
 export const simulateSendMessageTool = tool({
   name: "simulate_send_message",
-  description: "Appends outbound messages to the simulated client chat transcript and audit log.",
+  description:
+    "Appends an outbound clarification or general message to the client chat transcript and audit log. " +
+    "Use this ONLY for clarifying questions and general messages (message_type: 'clarifying_questions' or 'general'). " +
+    "DO NOT use this for quotes — quotes are saved via update_job_state and sent by the SME via the dashboard.",
   inputSchema: simulateSendMessageInputSchema,
   callback: async (
     input: SimulateSendMessageInput
   ): Promise<SimulateSendMessageOutput> => {
-    // Orchestration layer (agentLoop.ts) will:
-    // 1. Enforce that required_approval matches message_type rules
-    // 2. Append message to job chat transcript
-    // 3. Record event in state/auditLog.ts with required_approval flag
-    // 4. Return unique send_id and ISO sent_at timestamp
+    const sendId = `send-${Date.now()}`;
+    const sentAt = new Date().toISOString();
+
+    // Persist the message to the job transcript
+    JobStore.appendMessage(input.job_id, {
+      message_id: sendId,
+      job_id: input.job_id,
+      sender: "agent",
+      message_type: "CLARIFICATION",
+      text: input.draft_message_to_client,
+      required_approval: false,
+      created_at: sentAt,
+    });
+
+    AuditLog.logClarificationSent(
+      input.job_id,
+      [input.draft_message_to_client],
+      0, // round tracking is handled by update_job_state tool
+    );
+
     return {
-      send_id: `send-${Date.now()}`,
+      send_id: sendId,
       job_id: input.job_id,
       status: "SUCCESS",
-      sent_at: new Date().toISOString(),
+      sent_at: sentAt,
       error: null,
     };
   },

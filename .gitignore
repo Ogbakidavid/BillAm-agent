@@ -6,3 +6,6 @@ dist/
 *.log
 coverage/
 .jest/
+# Agent session storage
+.billam-agent-storage/
+.jobs-store.json

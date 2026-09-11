@@ -6,8 +6,11 @@
 import { app } from "./app";
 import { env } from "./config/env";
 import { logger } from "./utils/logger";
+import { seedInitialJobs } from "./state/JobStore";
 
 const port = env.port;
+
+seedInitialJobs();
 
 const server = app.listen(port, () => {
   logger.info(`🚀 BillAm Agent server listening at http://localhost:${port}`, {

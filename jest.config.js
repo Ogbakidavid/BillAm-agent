@@ -11,17 +11,19 @@ module.exports = {
       {
         tsconfig: {
           target: "ES2020",
-          module: "commonjs",
+          module: "NodeNext",
+          moduleResolution: "NodeNext",
           esModuleInterop: true,
           strict: true,
           skipLibCheck: true,
           resolveJsonModule: true,
+          isolatedModules: true,
           types: ["jest", "node"],
         },
       },
     ],
   },
   moduleNameMapper: {
-    "^@strands-agents/sdk$": "<rootDir>/tests/__mocks__/strandsSdkMock.ts",
+    "^@strands-agents/sdk(/.*)?$": "<rootDir>/tests/__mocks__/strandsSdkMock.ts",
   },
 };

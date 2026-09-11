@@ -1,5 +1,13 @@
 import { simulateSendMessageTool } from "../../src/agent/tools/simulateSendMessage";
 
+jest.mock("../../src/state/JobStore", () => ({
+  appendMessage: jest.fn(),
+}));
+
+jest.mock("../../src/state/auditLog", () => ({
+  logClarificationSent: jest.fn(),
+}));
+
 describe("simulateSendMessageTool", () => {
   it("should send clarifying questions autonomously with required_approval false", async () => {
     const input = {
@@ -7,7 +15,7 @@ describe("simulateSendMessageTool", () => {
       message_type: "clarifying_questions" as const,
       draft_message_to_client: "What is your event location?",
       sender: "business" as const,
-      required_approval: false,
+      required_approval: false as const,
     };
 
     const result = await simulateSendMessageTool.invoke(input);
@@ -20,44 +28,28 @@ describe("simulateSendMessageTool", () => {
     expect(result.error).toBeNull();
   });
 
-  it("should allow sending quote message when required_approval is true (SME approved)", async () => {
-    const input = {
+  it("should reject message_type 'quote' — quotes are sent via SME dashboard only", async () => {
+    // The new schema no longer accepts "quote" as a message_type.
+    // This is now enforced at the TypeScript level — the union only allows
+    // "clarifying_questions" | "general". This test documents that intent.
+    const schemaCheck = (simulateSendMessageTool as any).inputSchema?.safeParse?.({
       job_id: "job-202",
-      message_type: "quote" as const,
-      draft_message_to_client: "Here is your quote of ₦150,000",
-      sender: "business" as const,
-      required_approval: true,
-    };
-
-    const result = await simulateSendMessageTool.invoke(input);
-
-    expect(result.status).toBe("SUCCESS");
-    expect(result.job_id).toBe("job-202");
-  });
-
-  it("should ENFORCE SME APPROVAL INVARIANT: fail validation if message_type is quote but required_approval is false", async () => {
-    const input = {
-      job_id: "job-202",
-      message_type: "quote" as const,
-      draft_message_to_client: "Attempting unapproved quote send",
-      sender: "business" as const,
+      message_type: "quote",
+      draft_message_to_client: "Here is your quote",
+      sender: "business",
       required_approval: false,
-    };
-
-    await expect(simulateSendMessageTool.invoke(input)).rejects.toThrow(
-      /Quote messages MUST have required_approval set to true/
-    );
+    });
+    expect(schemaCheck?.success).toBe(false);
   });
 
   it("should fail validation if draft_message_to_client is empty", async () => {
-    const input = {
+    const schemaCheck = (simulateSendMessageTool as any).inputSchema?.safeParse?.({
       job_id: "job-202",
-      message_type: "general" as const,
+      message_type: "general",
       draft_message_to_client: "",
-      sender: "business" as const,
+      sender: "business",
       required_approval: false,
-    };
-
-    await expect(simulateSendMessageTool.invoke(input)).rejects.toThrow();
+    });
+    expect(schemaCheck?.success).toBe(false);
   });
 });
