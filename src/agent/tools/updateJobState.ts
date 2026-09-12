@@ -14,41 +14,55 @@ import * as JobStore from "../../state/JobStore";
 import * as AuditLog from "../../state/auditLog";
 import { transitionJob } from "../../state/stateMachine";
 import { JobState } from "../../types/Job";
-import { randomUUID } from "crypto";
+import { randomInt, randomUUID } from "crypto";
 
-function stableVariant(jobId: string, count: number): number {
-  return [...jobId].reduce((sum, character) => sum + character.charCodeAt(0), 0) % count;
-}
-
-function buildQuoteReviewMessage(jobId: string, businessType: string): string {
+function buildQuoteReviewMessage(businessType: string): string {
   const messages: Record<string, string[]> = {
     caterer: [
       "Thanks for sharing the event details. I’ve put together the catering quote for the business owner to review, and we’ll come back to you once it’s approved.",
       "That gives us what we need to price the catering properly. The quote is now with the business owner for review, and we’ll update you shortly.",
+      "I’ve captured the catering requirements and prepared the quote for the business owner’s review. We’ll follow up as soon as there’s an approval update.",
+      "We have enough detail to move forward with the catering estimate. The business owner is reviewing it now, and we’ll be back in touch shortly.",
+      "Your catering brief is complete. I’ve sent the quote for internal review and will share the next step once the business owner has looked it over.",
     ],
     photographer: [
       "Great, I have the details needed for your photography quote. It’s ready for the business owner’s review, and we’ll get back to you after approval.",
       "Thanks, that’s everything we need to shape the photography quote. The business owner will review it and come back to you soon.",
+      "I’ve got the photography brief covered and prepared the quote for review. We’ll follow up once the business owner has confirmed it.",
+      "Perfect, the photography requirements are clear now. The quote is with the business owner, and we’ll update you with the next step shortly.",
+      "The photography quote is ready for an internal review. Thanks for the clear details — we’ll be in touch after the business owner responds.",
     ],
     tailor: [
       "Perfect, I’ve captured the outfit requirements. The quote is ready for the business owner to review, and we’ll be in touch once it’s approved.",
       "I have the details needed for your outfit request. I’m sending the quote to the business owner for review and will update you shortly.",
+      "Your outfit brief is all set. I’ve prepared the quote for the business owner to review, and we’ll come back to you with an update.",
+      "Thanks, I understand the tailoring requirements now. The quote is under review with the business owner, and we’ll follow up soon.",
+      "I’ve put together the quote based on the outfit details you shared. The business owner will review it before we confirm the next step.",
     ],
     event_planner: [
       "Thanks, I’ve got the event brief. The planning quote is now ready for the business owner’s review, and we’ll come back to you with the next step.",
       "That’s enough detail for us to prepare the event quote. The business owner will review it and we’ll follow up once it’s approved.",
+      "The event brief is complete and the planning quote is ready for internal review. We’ll let you know as soon as the business owner responds.",
+      "I’ve captured the key planning requirements and sent the quote to the business owner for review. We’ll be back with the next step shortly.",
+      "Thanks, we have a clear picture of the event now. The business owner is reviewing the planning quote, and we’ll follow up with an update.",
     ],
     equipment_rental: [
       "Thanks for the equipment details. I’ve prepared the rental quote for the business owner to review, and we’ll confirm the next step soon.",
       "I have what I need for the equipment request. The quote is now with the business owner for review, and we’ll get back to you shortly.",
+      "The equipment requirements are clear, so I’ve prepared the rental quote for internal review. We’ll confirm the next step once it’s checked.",
+      "Thanks, I’ve captured the rental details. The business owner is reviewing the quote now, and we’ll update you shortly.",
+      "Your equipment request is ready for review. I’ve sent the quote to the business owner and will come back to you once it has been confirmed.",
     ],
     event_vendor: [
       "Thanks, I’ve captured the full event brief. The quote is ready for the business owner’s review, and we’ll update you once it’s approved.",
       "That gives us everything needed to prepare your event quote. It’s now with the business owner for review, and we’ll follow up shortly.",
+      "I’ve got the full event details and prepared the quote for internal review. We’ll get back to you as soon as the business owner responds.",
+      "Perfect, the event requirements are clear now. The business owner is reviewing the quote, and we’ll share the next step shortly.",
+      "Your event brief is complete and the quote is ready for review. Thanks for the details — we’ll follow up once it’s been checked.",
     ],
   };
   const options = messages[businessType] ?? messages.event_vendor;
-  return options[stableVariant(jobId, options.length)];
+  return options[randomInt(options.length)];
 }
 
 function buildFailedRetryMessage(businessType: string): string {
@@ -205,7 +219,7 @@ export const updateJobStateTool = tool({
           job_id: input.job_id,
           sender: "agent",
           message_type: "TEXT",
-          text: buildQuoteReviewMessage(input.job_id, currentJob?.business_type ?? "event_vendor"),
+          text: buildQuoteReviewMessage(currentJob?.business_type ?? "event_vendor"),
           required_approval: false,
           created_at: new Date().toISOString(),
         });
