@@ -16,6 +16,48 @@ import { transitionJob } from "../../state/stateMachine";
 import { JobState } from "../../types/Job";
 import { randomUUID } from "crypto";
 
+function stableVariant(jobId: string, count: number): number {
+  return [...jobId].reduce((sum, character) => sum + character.charCodeAt(0), 0) % count;
+}
+
+function buildQuoteReviewMessage(jobId: string, businessType: string): string {
+  const messages: Record<string, string[]> = {
+    caterer: [
+      "Thanks for sharing the event details. I’ve put together the catering quote for the business owner to review, and we’ll come back to you once it’s approved.",
+      "That gives us what we need to price the catering properly. The quote is now with the business owner for review, and we’ll update you shortly.",
+    ],
+    photographer: [
+      "Great, I have the details needed for your photography quote. It’s ready for the business owner’s review, and we’ll get back to you after approval.",
+      "Thanks, that’s everything we need to shape the photography quote. The business owner will review it and come back to you soon.",
+    ],
+    tailor: [
+      "Perfect, I’ve captured the outfit requirements. The quote is ready for the business owner to review, and we’ll be in touch once it’s approved.",
+      "I have the details needed for your outfit request. I’m sending the quote to the business owner for review and will update you shortly.",
+    ],
+    event_planner: [
+      "Thanks, I’ve got the event brief. The planning quote is now ready for the business owner’s review, and we’ll come back to you with the next step.",
+      "That’s enough detail for us to prepare the event quote. The business owner will review it and we’ll follow up once it’s approved.",
+    ],
+    equipment_rental: [
+      "Thanks for the equipment details. I’ve prepared the rental quote for the business owner to review, and we’ll confirm the next step soon.",
+      "I have what I need for the equipment request. The quote is now with the business owner for review, and we’ll get back to you shortly.",
+    ],
+    event_vendor: [
+      "Thanks, I’ve captured the full event brief. The quote is ready for the business owner’s review, and we’ll update you once it’s approved.",
+      "That gives us everything needed to prepare your event quote. It’s now with the business owner for review, and we’ll follow up shortly.",
+    ],
+  };
+  const options = messages[businessType] ?? messages.event_vendor;
+  return options[stableVariant(jobId, options.length)];
+}
+
+function buildFailedRetryMessage(businessType: string): string {
+  if (businessType === "caterer") {
+    return "Thanks for sharing the event details. I’m reviewing the catering options with the business owner so we can recommend something suitable for your needs.";
+  }
+  return "Thanks for the details. I’m reviewing the best way to scope this request with the business owner so we can come back with practical options.";
+}
+
 const lineItemSchema = z.object({
   name: z.string(),
   quantity: z.number(),
@@ -163,7 +205,23 @@ export const updateJobStateTool = tool({
           job_id: input.job_id,
           sender: "agent",
           message_type: "TEXT",
-          text: "Thanks for sharing those details. I’ve prepared a quote for the business owner to review and will get back to you once it has been approved.",
+          text: buildQuoteReviewMessage(input.job_id, currentJob?.business_type ?? "event_vendor"),
+          required_approval: false,
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    if (input.new_state === "FAILED_RETRY") {
+      const currentJob = JobStore.getJob(input.job_id);
+      const lastMessage = currentJob?.messages[currentJob.messages.length - 1];
+      if (!lastMessage || lastMessage.sender !== "agent") {
+        JobStore.appendMessage(input.job_id, {
+          message_id: randomUUID(),
+          job_id: input.job_id,
+          sender: "agent",
+          message_type: "TEXT",
+          text: buildFailedRetryMessage(currentJob?.business_type ?? "event_vendor"),
           required_approval: false,
           created_at: new Date().toISOString(),
         });

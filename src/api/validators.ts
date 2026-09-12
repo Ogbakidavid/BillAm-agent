@@ -28,6 +28,16 @@ export const editQuoteSchema = z.object({
     })
   )
   .optional(),
+  contingencies: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        label: z.string(),
+        rate: z.number().nullable().optional(),
+        amount: z.number(),
+      })
+    )
+    .optional(),
   notes: z.string().optional(),
 });
 

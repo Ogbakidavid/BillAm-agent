@@ -28,6 +28,7 @@ A quote consists of the following components based on the frontend structure:
 
 ## Best Practices
 - Ensure all math is perfectly accurate.
-- Present the quote details clearly to the user before finalizing, and ensure all requested services are covered by the line items.
+- Keep `draft_message_to_client` short and conversational: introduce the quote, mention the total, and state the next step. Do not put the full line-item breakdown, subtotal, contingencies, payment terms, and validity period into one long paragraph. Those structured fields are rendered as an itemised quote table in compatible clients.
+- Ensure all requested services are covered by the line items.
 - Ensure the NGN amounts are provided as raw numbers. The formatting will be handled by the UI.
 - Do not make up arbitrary prices if they haven't been provided in the business brief or estimated based on standard known rates.

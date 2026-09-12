@@ -52,6 +52,11 @@ function ensureClientIdentity(job: { job_id: string; extracted_fields: Record<st
   }
 }
 
+function buildQuoteCoverMessage(total: number): string {
+  const formattedTotal = `₦${total.toLocaleString("en-NG")}`;
+  return `Your quote is ready. The total is ${formattedTotal}. I’ve included the itemised breakdown, additional fees, payment terms, and validity period below for your review.`;
+}
+
 /**
  * POST /jobs
  */
@@ -257,7 +262,7 @@ export async function editQuoteHandler(
     });
     return;
   }
-  const { line_items, notes } = parsed.data;
+  const { line_items, contingencies, notes } = parsed.data;
   // Apply edits
   if (line_items) {
     job.quote.line_items = line_items.map((item) => ({
@@ -265,20 +270,24 @@ export async function editQuoteHandler(
       name: item.name,
       quantity: item.quantity,
       unit_price: item.unit_price,
-      total: item.total ?? (item.quantity ?? 1) * (item.unit_price ?? 0),
+      total: (item.quantity ?? 1) * (item.unit_price ?? 0),
     })) as LineItem[];
-    // Recalculate totals
-    const subtotal = job.quote.line_items.reduce(
-      (sum, item) => sum + item.total,
-      0,
-    );
-    const contingencyTotal = job.quote.contingencies.reduce(
-      (sum, c) => sum + c.amount,
-      0,
-    );
-    job.quote.subtotal = subtotal;
-    job.quote.total = subtotal + contingencyTotal;
   }
+  if (contingencies) {
+    job.quote.contingencies = contingencies.map((contingency) => ({
+      id: contingency.id || randomUUID(),
+      label: contingency.label,
+      rate: contingency.rate ?? 0,
+      amount: contingency.amount,
+    }));
+  }
+  // Always recalculate from the persisted rows. The client-provided totals are
+  // display hints only and must never be the source of truth.
+  const subtotal = job.quote.line_items.reduce((sum, item) => sum + item.total, 0);
+  const contingencyTotal = job.quote.contingencies.reduce((sum, c) => sum + c.amount, 0);
+  job.quote.subtotal = subtotal;
+  job.quote.total = subtotal + contingencyTotal;
+  job.quote.updated_at = new Date().toISOString();
   job.updated_at = new Date().toISOString();
   logQuoteEdited(job.job_id, { line_items, notes });
   res.status(200).json({
@@ -341,7 +350,7 @@ export async function approveQuoteHandler(
     job_id: job.job_id,
     sender: "agent",
     message_type: "QUOTE",
-    text: job.quote.draft_message ?? "Your quote is ready.",
+    text: buildQuoteCoverMessage(job.quote.total),
     required_approval: true,
     created_at: sentAt,
   };
