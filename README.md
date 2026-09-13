@@ -35,7 +35,7 @@ The development server listens on `http://localhost:3001` by default. Health che
 GET http://localhost:3001/health
 ```
 
-Set `LLM_PROVIDER=anthropic` with `ANTHROPIC_API_KEY`, or configure the Bedrock credentials and region when using Bedrock. Never commit `.env` or API keys.
+Set `ANTHROPIC_API_KEY` in `.env` for local Anthropic development. The default model is Haiku and can be changed with `BILLAM_MODEL_ID`. Never commit `.env` or API keys. If your shell already exports `ANTHROPIC_API_KEY`, it takes precedence over `.env`; run `unset ANTHROPIC_API_KEY` or use a fresh terminal when testing the repository key.
 
 ## API surface
 
@@ -56,11 +56,23 @@ The dashboard uses `business_id=biz-event-decoration` for the event-decoration w
 
 ## Tests and checks
 
+Run these after cloning to verify the backend before connecting the dashboard:
+
 ```bash
-pnpm build
 pnpm typecheck
 pnpm test -- --runInBand
+pnpm build
 ```
+
+The full test suite includes unit, state, tool, and API tests. API tests open a local HTTP listener, so run them on a normal development machine rather than a restricted sandbox.
+
+For the live Postman scenarios, start the server first:
+
+```bash
+pnpm dev
+```
+
+Then import `postman/collections/BillAm_Agent_API.postman_collection.json` and the local environment from `postman/environments/`. The same scenarios are documented in [`docs/E2E_TESTING_GUIDE.md`](./docs/E2E_TESTING_GUIDE.md).
 
 ## Repository guide
 
