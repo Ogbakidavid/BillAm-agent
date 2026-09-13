@@ -16,14 +16,11 @@ describe("Tone Guardrail Steering", () => {
 
     expect(config).toBeDefined();
 
-    // Verify attempt limit
-    expect(config.maxAttempts).toBe(3);
-
-    // Verify the goal string contains our key governance instructions
-    expect(config.goal).toContain(
-      "professional, empathetic, and highly concise",
-    );
-    expect(config.goal).toContain("Avoid overly complex jargon");
+    // The guardrail uses a programmatic validator so normal responses do not
+    // trigger a second LLM judge call.
+    expect(typeof config.goal).toBe("function");
+    expect(config.maxAttempts).toBe(2);
+    expect(config.timeout).toBe(15_000);
 
     // Verify the GoalLoop constructor was called
     expect(GoalLoop).toHaveBeenCalledTimes(1);

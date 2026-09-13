@@ -45,9 +45,22 @@ client_message: "${lastMessage ? lastMessage.text : ""}"
     const agent = createBillamAgent(jobId);
 
     // Invoke the autonomous Strands Agent with limits
-    await agent.invoke(prompt, {
-      limits: { turns: 10 }
+    const result = await agent.invoke(prompt, {
+      // A normal clarification takes 3–4 turns and a quote takes 4–5.
+      // Six leaves one recovery turn without allowing an unbounded loop.
+      limits: {
+        turns: 6,
+        outputTokens: 2500,
+        totalTokens: 16000,
+      },
     });
+
+    const usage = result.metrics?.latestAgentInvocation?.usage;
+    console.info(
+      `[AgentUsage] job=${jobId} stop=${result.stopReason} ` +
+        `input=${usage?.inputTokens ?? 0} output=${usage?.outputTokens ?? 0} ` +
+        `total=${usage?.totalTokens ?? 0}`,
+    );
 
     const updatedJob = JobStore.getJob(jobId);
     if (!updatedJob) {
