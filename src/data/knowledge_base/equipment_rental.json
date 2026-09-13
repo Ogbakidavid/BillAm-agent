@@ -1,0 +1,71 @@
+{
+  "business_type": "equipment_rental",
+  "version": "1.0",
+  "description": "Required/optional field schema for Nigerian AV/equipment rental SMEs.",
+  "required_fields": [
+    {
+      "field_id": "equipment_needed",
+      "label": "Equipment Needed",
+      "type": "string",
+      "clarifying_question_templates": [
+        "What equipment do you need — generators, chairs, canopies, PA system, projectors?"
+      ]
+    },
+    {
+      "field_id": "event_date",
+      "label": "Event Date",
+      "type": "date",
+      "clarifying_question_templates": [
+        "What date do you need the equipment for?"
+      ]
+    },
+    {
+      "field_id": "venue_location",
+      "label": "Delivery Location",
+      "type": "string",
+      "clarifying_question_templates": [
+        "Where should the equipment be delivered?"
+      ]
+    },
+    {
+      "field_id": "rental_duration_days",
+      "label": "Rental Duration (Days)",
+      "type": "integer",
+      "validation": { "min": 1, "max": 30 },
+      "clarifying_question_templates": [
+        "How many days do you need the equipment for?"
+      ]
+    }
+  ],
+  "optional_fields": [
+    {
+      "field_id": "setup_required",
+      "label": "Setup / Installation Required",
+      "type": "boolean",
+      "clarifying_question_templates": [
+        "Do you need us to set up and take down the equipment?"
+      ]
+    },
+    {
+      "field_id": "operator_needed",
+      "label": "Operator Needed",
+      "type": "boolean",
+      "clarifying_question_templates": [
+        "Will you need an operator (e.g. sound engineer, generator attendant)?"
+      ]
+    }
+  ],
+  "field_completeness_rules": {
+    "required_for_quote": [
+      "equipment_needed",
+      "event_date",
+      "venue_location",
+      "rental_duration_days"
+    ],
+    "notes": "All required fields must be present before a quote can be computed."
+  },
+  "ambiguity_handling": {
+    "vague_quantifiers_not_accepted": ["a few days", "short time"],
+    "note": "Treat vague duration as missing."
+  }
+}

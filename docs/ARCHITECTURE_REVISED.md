@@ -1,9 +1,9 @@
-# BillAm Agent — System Architecture
+# BillAm Agent — System Architecture (V2)
 
-**Status:** Revised for autonomous dashboard simulation  
-**Demo scope:** Event vendor first; additional business types are configuration/data extensions  
-**Timeline:** 15-day technical work breakdown  
-**Primary stack:** Strands Agents SDK + Amazon Bedrock, with direct Anthropic fallback if Bedrock access/credit approval is delayed
+**Status:** V2 — Refactored for native Strands Agents SDK orchestration  
+**Demo scope:** Event vendor first; additional business types are data/config extensions  
+**Stack:** Strands Agents SDK + Anthropic Claude Sonnet 4.5 via `AnthropicModel`  
+**Hackathon:** AWS x Strands Devpost Hackathon
 
 ---
 
@@ -12,26 +12,26 @@
 BillAm is an autonomous client-intake and quote-generation agent demonstrated through a simulated WhatsApp-style chat inside an SME dashboard.
 
 The agent autonomously:
-1. ingests each client message;
-2. extracts and accumulates structured brief data;
-3. checks the active business-type knowledge base for completeness;
-4. generates and auto-sends clarifying questions for up to two rounds;
+1. ingests each client message (handled at the API layer by `postMessageHandler`);
+2. extracts and accumulates structured brief data using `update_job_state`;
+3. checks the active business-type knowledge base using `fetch_knowledge_base`;
+4. generates and auto-sends clarifying questions for up to two rounds using `simulate_send_message`;
 5. escalates unresolved briefs to the SME after the clarification cap;
-6. computes an itemized, contingency-aware draft quote once the brief is complete.
+6. computes an itemized, contingency-aware draft quote using `fetch_price_catalog` + `update_job_state`.
 
 The SME has one mandatory approval checkpoint:
 
-> A quote is never sent to the simulated client chat until the SME reviews, may edit, and explicitly approves it.
+> A quote is never sent to the simulated client chat until the SME reviews, may edit, and explicitly approves it via `POST /jobs/:id/approve_quote`.
 
-Clarifying questions do **not** require SME approval.
+Clarifying questions do **not** require SME approval — they are sent autonomously.
 
-Hackathon scope excludes live WhatsApp integration. ASR is optional and is not part of the required text-first demo.
+Hackathon scope excludes live WhatsApp integration.
 
 ---
 
 ## 2. System Architecture
 
-```text
+```
 ┌───────────────────────────────────────────────────────────────┐
 │                  SME DASHBOARD / SIMULATED CHAT               │
 │                                                               │
@@ -53,6 +53,7 @@ Hackathon scope excludes live WhatsApp integration. ASR is optional and is not p
 │  GET  /jobs/:id/missing_fields                                 │
 │  POST /jobs/:id/manual_input                                   │
 │  POST /jobs/:id/retry                                          │
+│  PATCH /jobs/:id/quote                                         │
 └──────────────────────────────┬────────────────────────────────┘
                                ▼
 ┌───────────────────────────────────────────────────────────────┐
@@ -64,42 +65,52 @@ Hackathon scope excludes live WhatsApp integration. ASR is optional and is not p
 │                    ├─→ AWAITING_HUMAN_APPROVAL                │
 │                    └─→ FAILED_RETRY                           │
 │                                                               │
-│ Audit: state changes, tool calls, auto-sends, edits, approval,│
-│ errors and retries                                            │
+│ Audit: state changes, tool calls, auto-sends, edits,          │
+│ approval, errors and retries                                  │
 └──────────────────────────────┬────────────────────────────────┘
                                ▼
 ┌───────────────────────────────────────────────────────────────┐
-│                 STRANDS AGENT ORCHESTRATION                   │
+│              STRANDS AGENT ORCHESTRATION (V2)                 │
 │                                                               │
-│  1. ingest_chat_message                                       │
-│  2. parse_client_brief                                        │
-│  3. generate_clarifying_questions                             │
-│  4. compute_quote                                             │
+│  Orchestration: createBillamAgent(jobId) → Agent.invoke()     │
 │                                                               │
-│  Supporting send boundary: simulate_send_message              │
-│  • clarification → required_approval: false                   │
-│  • quote → required_approval: true                            │
+│  SOP: billam-sop.md (Markdown Standard Operating Procedure)   │
+│                                                               │
+│  Tools (pure capability tools):                               │
+│  • fetch_knowledge_base    → loads KB JSON for business type  │
+│  • fetch_price_catalog     → loads pricing JSON               │
+│  • update_job_state        → mutates job fields + quote       │
+│  • simulate_send_message   → autonomous clarification sends   │
+│                                                               │
+│  Skills (modular SOPs loaded by AgentSkills plugin):          │
+│  • conversation-style/SKILL.md  → tone + language rules       │
+│  • quote-generation/SKILL.md    → pricing logic guidance      │
+│                                                               │
+│  Plugins:                                                     │
+│  • SessionManager   → persists conversation state per job     │
+│  • ToneGuardrail    → GoalLoop enforcing professional tone    │
+│  • RateLimiterHook  → blocks runaway tool-call loops (max 5)  │
 └──────────────────────────────┬────────────────────────────────┘
                                ▼
 ┌───────────────────────────────────────────────────────────────┐
-│                         LLM LAYER                             │
+│                       LLM LAYER (V2)                          │
 │                                                               │
-│ Primary: Amazon Bedrock                                       │
-│ Fallback: Anthropic API via ANTHROPIC_API_KEY                 │
+│  Model: AnthropicModel (claude-sonnet-4-5)                    │
+│  Managed natively by @strands-agents/sdk                      │
+│  Auth: ANTHROPIC_API_KEY from environment                     │
 │                                                               │
-│ Used for structured extraction, contextual clarification,     │
-│ reasoning and quote drafting. Deterministic application logic │
-│ enforces state transitions and approval gates.                │
+│  The SDK manages: context window, tool-call parsing,          │
+│  multi-turn history, streaming, and recursive tool loops.     │
 └──────────────────────────────┬────────────────────────────────┘
                                ▼
 ┌───────────────────────────────────────────────────────────────┐
 │                       BUSINESS DATA                           │
 │                                                               │
-│ knowledge_base/event_vendor.json                              │
-│   → parsing + clarification rules                             │
+│ knowledge_base/{business_type}.json                           │
+│   → required fields, extraction hints, clarification rules   │
 │                                                               │
-│ price_catalog/event_vendor.json                               │
-│   → pricing tiers, line items, contingencies, quote terms     │
+│ price_catalog/{business_type}.json                            │
+│   → pricing tiers, line items, contingencies, quote terms    │
 │                                                               │
 │ sample_chat_transcripts_event_vendor.json                     │
 │   → tests + demo rehearsal                                    │
@@ -112,77 +123,74 @@ Hackathon scope excludes live WhatsApp integration. ASR is optional and is not p
 
 ### A. Complete brief
 
-```text
+```
 Client sends message
         ↓
-ingest_chat_message
+API: POST /jobs/:id/messages
+  - appendMessage() to JobStore
+  - transitionJob(state, "INGESTING")
         ↓
-IDLE/CLARIFYING → INGESTING → REASONING
+runAgentLoop(jobId)
+  - createBillamAgent(jobId)
+  - agent.invoke(prompt, { limits: { turns: 10 } })
         ↓
-parse_client_brief
+Agent → fetch_knowledge_base
         ↓
-All required fields complete?
-        │
-       Yes
+Agent → update_job_state (all required fields complete)
         ↓
-compute_quote
+Agent → fetch_price_catalog
         ↓
-AWAITING_HUMAN_APPROVAL
+Agent → update_job_state(quote, state: "AWAITING_HUMAN_APPROVAL")
         ↓
-SME reviews and may edit draft
+SME reviews draft in dashboard
         ↓
-SME clicks “Approve & Send to Client”
+POST /jobs/:id/approve_quote
         ↓
-simulate_send_message(required_approval=true)
-        ↓
-EXECUTED
-        ↓
-Quote appears as business message in simulated chat
+Quote status: "SENT", job state: "EXECUTED"
+Quote appears in simulated client chat
 ```
 
 ### B. Incomplete brief
 
-```text
-Client message
+```
+Client message (missing fields)
       ↓
-ingest_chat_message → parse_client_brief
+Agent → fetch_knowledge_base
       ↓
-Missing required fields?
+Missing required fields detected?
       │
      Yes
       ↓
 Have fewer than 2 clarification rounds been used?
       │
-      ├─ Yes → generate_clarifying_questions
+      ├─ Yes → Agent → simulate_send_message(clarifying_questions)
       │          ↓
-      │       simulate_send_message(required_approval=false)
+      │       update_job_state(state: "CLARIFYING")
       │          ↓
-      │       CLARIFYING — wait for client reply
+      │       Wait for client reply → repeat loop
       │
-      └─ No  → NEEDS_SME_INPUT
+      └─ No  → update_job_state(state: "NEEDS_SME_INPUT")
                  ↓
-              Dashboard shows missing fields + SME summary
+              Dashboard shows missing fields
                  ↓
-              SME supplies values
+              POST /jobs/:id/manual_input
                  ↓
-              REASONING → compute_quote
+              REASONING → compute quote
 ```
 
 ### C. Recoverable failure
 
-```text
-Ingestion / parsing / pricing failure
-                ↓
-          FAILED_RETRY
-                ↓
-      Error shown and logged
-                ↓
-       Retry or manual recovery
-                ↓
-       INGESTING or REASONING
 ```
-
-`NEEDS_SME_INPUT` is an expected escalation path, not an error state.
+Agent / tool error
+              ↓
+        FAILED_RETRY
+              ↓
+    Error shown and logged in audit
+              ↓
+     POST /jobs/:id/retry
+              ↓
+     INGESTING → agent re-invoked
+```
 
 ---
 
@@ -190,161 +198,98 @@ Ingestion / parsing / pricing failure
 
 | State | Meaning |
 |---|---|
-| `IDLE` | No active processing |
-| `INGESTING` | A new client message is being recorded |
-| `REASONING` | Agent is extracting, validating or pricing |
-| `CLARIFYING` | Questions have been auto-sent; waiting for client |
-| `NEEDS_SME_INPUT` | Two clarification rounds were exhausted |
-| `AWAITING_HUMAN_APPROVAL` | Editable quote draft is ready |
-| `EXECUTED` | Approved quote was sent to simulated chat |
-| `FAILED_RETRY` | Recoverable technical/business-data failure |
+| `IDLE` | Job created, no processing started |
+| `INGESTING` | New client message recorded, agent not yet started |
+| `REASONING` | Agent is actively executing its loop |
+| `CLARIFYING` | Clarifying questions auto-sent; awaiting client reply |
+| `NEEDS_SME_INPUT` | Two clarification rounds exhausted; SME must supply values |
+| `AWAITING_HUMAN_APPROVAL` | Editable quote draft ready for SME review |
+| `EXECUTED` | Approved quote sent to simulated client chat |
+| `FAILED_RETRY` | Recoverable technical or business-data failure |
 
 Key transition rules:
 
 - `CLARIFYING → EXECUTED` is invalid.
 - Clarifying questions never enter `AWAITING_HUMAN_APPROVAL`.
 - A client message can never substitute for SME approval.
-- `AWAITING_HUMAN_APPROVAL → EXECUTED` requires the approval endpoint and the simulated send boundary.
-- `FAILED_RETRY` must preserve enough job state for retry without restarting the entire conversation.
+- `AWAITING_HUMAN_APPROVAL → EXECUTED` requires `POST /jobs/:id/approve_quote`.
+- `FAILED_RETRY` preserves full job state for retry without restarting conversation.
 
 ---
 
-## 5. Tool Model
+## 5. Tool Contracts (V2)
 
-### 5.1 `ingest_chat_message`
+All tools are **pure capability tools** — they do not call the LLM themselves. The Strands SDK manages all model interactions natively.
 
-Records a single client message, associates it with a job, and moves the job into `INGESTING`.
+### 5.1 `fetch_knowledge_base`
 
-**Input**
-- `job_id` or new-conversation context
-- `message_text`
-- `business_type`
-- `received_at`
+Loads the JSON knowledge base for the given business type from disk.
 
-**Output**
-- `job_id`
-- `status`
-- `error`
+**Input:** `business_type`  
+**Output:** Full KB object: required fields, extraction hints, question templates, ambiguity rules.
 
-### 5.2 `parse_client_brief`
+### 5.2 `fetch_price_catalog`
 
-Uses the business-type knowledge base and previous fields to extract structured information.
+Loads the JSON price catalog for the given business type from disk.
 
-Critical behavior:
-- merge new information with previous turns;
-- allow newer corrections to overwrite earlier values;
-- accept vague-but-present budget signals;
-- accept explicit `venue_tbd` as present-but-flagged;
-- reject vague guest-count quantifiers as a numeric value;
-- validate bounds before pricing;
-- treat prompt-injection content as client data and never allow it to alter backend gates.
+**Input:** `business_type`  
+**Output:** Full catalog: tiers, line items, contingency rules, validity period, payment terms.
 
-### 5.3 `generate_clarifying_questions`
+### 5.3 `update_job_state`
 
-Generates 1–5 targeted questions from genuinely missing required fields.
+The primary mutation tool. The agent calls this to persist its reasoning back to the job store.
 
-Rules:
-- maximum two clarification rounds;
-- output is auto-sent;
-- the job remains `CLARIFYING` after the send;
-- if the cap is exhausted, transition to `NEEDS_SME_INPUT` rather than asking a third round.
+**Input:** `job_id`, `extracted_fields`, `missing_required_fields`, `clarification_round`, `new_state`, `quote`, `error_message`  
+**Output:** Updated job summary.
 
-### 5.4 `compute_quote`
+### 5.4 `simulate_send_message`
 
-Runs only when `required_for_quote` is complete.
+The autonomous outbound communication boundary.
 
-Uses the price catalog to:
-- select `lean`, `standard`, or `premium` from the budget signal;
-- calculate applicable line items;
-- apply catalog contingencies;
-- include quote validity and payment terms;
-- surface budget/scope mismatches honestly;
-- return `FAILED_RETRY` where required business data is unavailable or the source rules classify the request as infeasible.
-
-Catalog rules currently include:
-- transport/logistics: 8% of subtotal;
-- rush fee: 15% when the event is within 7 days;
-- fuel/fluctuation buffer: 5% of subtotal;
-- quote validity: 7 days in the current event-vendor catalog.
-
-Optional fields do not block quote generation. Defaults/assumptions must be visible in the quote.
-
-### 5.5 `simulate_send_message`
-
-This is the communication boundary for the hackathon simulation.
-
-```text
-Clarifying question:
-required_approval = false
-→ append automatically to simulated chat
-→ audit log
-
-Quote:
-required_approval = true
-→ callable only after SME approval
-→ append to simulated chat
-→ transition to EXECUTED
-→ audit log
-```
-
-This separation is important because it makes the future replacement with a real `send_to_client` integration possible without changing the core approval policy.
+- `message_type: "clarifying_questions"` → appended autonomously to simulated chat, audit logged.
+- Quotes are **NEVER** sent through this tool. They are saved via `update_job_state` and sent only after SME approval.
 
 ---
 
 ## 6. Data Mapping
 
-| Data file | Used by | Purpose |
+| Data file | Used by tool | Purpose |
 |---|---|---|
-| `knowledge_base/event_vendor.json` | `parse_client_brief`, `generate_clarifying_questions` | Required/optional fields, extraction hints, ambiguity rules, question templates |
-| `price_catalog/event_vendor.json` | `compute_quote` | Pricing tiers, line items, contingencies, terms |
-| `sample_chat_transcripts_event_vendor.json` | Tests and demo | 18 state-machine and extraction scenarios |
+| `knowledge_base/{type}.json` | `fetch_knowledge_base` | Required/optional fields, extraction hints, ambiguity rules |
+| `price_catalog/{type}.json` | `fetch_price_catalog` | Pricing tiers, line items, contingencies, terms |
+| `sample_chat_transcripts_event_vendor.json` | Tests and demo | 18 E2E scenarios |
 
-The primary demo is event vendor. Caterer is a stretch goal and should be added as a data/config extension only after the core event-vendor flow is stable.
+Supported business types: `event_vendor`, `caterer`, `tailor`, `photographer`, `event_planner`, `equipment_rental`
 
 ---
 
 ## 7. Human-in-the-Loop Boundary
 
-There is exactly one mandatory approval gate:
+**Autonomous (no SME needed):**
+- Knowledge base lookup
+- Field extraction and accumulation
+- Clarifying question generation and sending (up to 2 rounds)
+- Price catalog lookup and quote computation
+- Escalation to `NEEDS_SME_INPUT`
 
-> Draft quote → SME review/edit → explicit approval → simulated send.
-
-The following are autonomous:
-- parsing;
-- clarification;
-- auto-sending clarifying questions;
-- pricing;
-- escalation to `NEEDS_SME_INPUT`.
-
-The following require explicit SME action:
-- supplying missing details after escalation;
-- editing a draft quote;
-- approving and sending a quote;
-- retrying or manually recovering from a failed state where applicable.
+**Requires explicit SME action:**
+- Supplying missing values after escalation (`POST /jobs/:id/manual_input`)
+- Editing a draft quote (`PATCH /jobs/:id/quote`)
+- Approving and sending a quote (`POST /jobs/:id/approve_quote`)
+- Triggering a retry (`POST /jobs/:id/retry`)
 
 ---
 
-## 8. Observability and Reliability
+## 8. Observability
 
-Every job should record:
-- state transitions;
-- tool name;
-- timestamp;
-- duration;
-- success/failure;
-- sanitized error;
-- autonomous send events;
-- SME edits;
-- approval events;
-- retry events.
+Every job records to the in-memory audit log:
+- State transitions (from → to, timestamp)
+- Tool invocations (name, input, output, duration)
+- Autonomous clarification sends
+- SME edits and approval events
+- Retry events and error messages
 
-Tool calls should retry up to two times before the job enters `FAILED_RETRY`.
-
-Hackathon target:
-- typical agent response within 30 seconds;
-- at least 10 concurrent jobs at demo scale.
-
-For the demo, an in-memory job store is acceptable only if state is retained for the active job lifecycle. If deployment/restart resilience is required, use the planned SQLite or persistent storage option rather than a fixed 30-minute expiry that can invalidate recovery.
+**Safeguards:** `RateLimiterHook` blocks any single invocation exceeding 5 tool calls. `GoalLoop` (ToneGuardrail) enforces professional tone with up to 3 retry attempts per response.
 
 ---
 
@@ -353,25 +298,20 @@ For the demo, an in-memory job store is acceptable only if state is retained for
 ### In scope
 - Simulated WhatsApp-style chat
 - Text-first client messages
-- Event-vendor knowledge base and price catalog
-- Autonomous clarification
-- Two-round cap
+- Event vendor + caterer + tailor knowledge and price catalogs
+- Autonomous clarification with two-round cap
 - Manual SME recovery
-- Draft quote review/edit/approve/send
-- Error/retry
+- Draft quote review / edit / approve / send
+- Error / retry flow
 - Audit logging
-- Bedrock primary LLM with Anthropic fallback
+- Claude Sonnet 4.5 via Strands SDK `AnthropicModel`
 
-### Optional
-- ASR/voice-note preprocessing if time permits
-- Caterer business type after core scope is stable
-
-### Out of scope for the hackathon build
+### Out of scope
 - Live WhatsApp API
-- Production client acceptance/negotiation loop
 - Production payment integration
 - Real-time vendor price feeds
+- ASR / voice-note preprocessing
 
 ---
 
-**Architecture status: revised to match the PRD, Developer Task Breakdown, tool contracts, knowledge-base rules, price catalog, and transcript-driven test flow.**
+**Architecture status: V2 — reflects full Strands SDK native orchestration, Markdown SOP, plugin architecture, and pure capability tools.**

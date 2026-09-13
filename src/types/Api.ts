@@ -3,7 +3,7 @@
 /**
  * Api.ts
  * API request and response types
- * Source: API_SPECIFICATION.md
+ * Source: API_SPECIFICATION.md & Frontend Sync
  */
 
 // ==================== Common Response Shape ====================
@@ -32,7 +32,7 @@ export type ApiErrorCode =
 // ==================== POST /jobs ====================
 export interface CreateJobRequest {
   business_id: string;
-  business_type: "caterer" | "tailor" | "event_vendor";
+  business_type: "event_vendor" | "caterer" | "tailor" | "photographer" | "event_planner" | "equipment_rental";
 }
 
 export interface CreateJobResponse {
@@ -45,12 +45,14 @@ export interface CreateJobResponse {
   extracted_fields: Record<string, any>;
   missing_required_fields: string[];
   quote: any | null;
+  audit_events: any[];
 }
 
 // ==================== POST /jobs/:id/messages ====================
 export interface SendMessageRequest {
   message_text: string;
   received_at: string;
+  sender?: "client" | "sme"; // Added sender override so SMEs can inject messages
 }
 
 export interface SendMessageResponse {
@@ -71,19 +73,25 @@ export interface GetJobResponse {
   extracted_fields: Record<string, any>;
   missing_required_fields: string[];
   quote: any | null;
+  audit_events: any[];
 }
 
 // ==================== GET /jobs/:id/quote ====================
 export interface GetQuoteResponse {
-  status: "DRAFT" | "SENT";
+  id: string;
+  job_id: string;
+  status: "draft" | "awaiting_approval" | "sent" | "expired";
   line_items: Array<{
+    id: string;
     name: string;
-    quantity?: number;
-    unit_price?: number;
+    quantity: number;
+    unit_price: number;
     total: number;
   }>;
   contingencies: Array<{
-    name: string;
+    id: string;
+    label: string;
+    rate: number | null;
     amount: number;
   }>;
   subtotal: number;
@@ -93,14 +101,18 @@ export interface GetQuoteResponse {
   payment_terms: string;
   assumptions: string[];
   draft_message?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // ==================== PATCH /jobs/:id/quote ====================
 export interface EditQuoteRequest {
   line_items?: Array<{
+    id: string;
     name: string;
-    quantity?: number;
-    unit_price?: number;
+    quantity: number;
+    unit_price: number;
+    total: number;
   }>;
   notes?: string;
 }
@@ -155,3 +167,66 @@ export interface RetryJobResponse {
   state: string;
   retry_started: boolean;
 }
+
+// ==================== Knowledge Base ====================
+export interface KnowledgeEntry {
+  knowledge_id: string;
+  business_id: string;
+  name: string;
+  source_type: "Pricing" | "Business information" | "Services" | "Policies" | "Other";
+  status: "UPLOADING" | "PROCESSING" | "READY" | "FAILED";
+  input_method: "file" | "manual";
+  file_name?: string;
+  error_message?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateKnowledgeRequest {
+  business_id: string;
+  name: string;
+  source_type: KnowledgeEntry["source_type"];
+  input_method: KnowledgeEntry["input_method"];
+  file_name?: string;
+}
+
+export interface UpdateKnowledgeRequest {
+  name?: string;
+  source_type?: KnowledgeEntry["source_type"];
+  status?: KnowledgeEntry["status"];
+  input_method?: KnowledgeEntry["input_method"];
+  file_name?: string;
+  error_message?: string;
+}
+
+// ==================== Availability ====================
+export interface AvailabilityDate {
+  availability_date_id: string;
+  business_id: string;
+  /** "YYYY-MM-DD" */
+  date: string;
+  status: "UNAVAILABLE" | "BOOKED";
+  reason?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateAvailabilityRequest {
+  business_id: string;
+  date: string;
+  status: AvailabilityDate["status"];
+  reason?: string;
+}
+
+export interface UpdateAvailabilityRequest {
+  status?: AvailabilityDate["status"];
+  reason?: string;
+}
+
+export interface CheckAvailabilityResponse {
+  date: string;
+  business_id: string;
+  available: boolean;
+  blocked_entry: AvailabilityDate | null;
+}
+

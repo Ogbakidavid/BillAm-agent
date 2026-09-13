@@ -39,7 +39,7 @@ The approval gate is enforced by the backend and state machine.
 Development:
 
 ```text
-http://localhost:3000
+http://localhost:3001
 ```
 
 API paths:
@@ -81,7 +81,6 @@ Suggested error codes:
 - `QUOTE_NOT_AVAILABLE`
 - `APPROVAL_REQUIRED`
 - `PRICE_DATA_UNAVAILABLE`
-- `LLM_PROVIDER_ERROR`
 - `RETRY_NOT_ALLOWED`
 - `INTERNAL_ERROR`
 
@@ -98,10 +97,7 @@ Suggested error codes:
   "clarification_round": 1,
   "messages": [],
   "extracted_fields": {},
-  "missing_required_fields": [
-    "guest_count",
-    "event_date"
-  ],
+  "missing_required_fields": ["guest_count", "event_date"],
   "quote": null,
   "error_message": null,
   "created_at": "2026-08-25T10:00:00.000Z",
@@ -167,12 +163,10 @@ This is the primary entry point for simulated client chat input.
 The endpoint should:
 
 1. validate the job;
-2. call `ingest_chat_message`;
-3. append the client message;
-4. transition to `INGESTING`;
-5. invoke the agent flow;
-6. parse and merge the brief;
-7. determine the next valid state.
+2. append the client message;
+3. transition to `INGESTING`;
+4. parse and merge the brief;
+5. determine the next valid state.
 
 Possible outcomes:
 
@@ -194,10 +188,7 @@ The API should return the current state after the processing cycle completes.
     "job_id": "job_123",
     "state": "CLARIFYING",
     "clarification_round": 1,
-    "missing_required_fields": [
-      "guest_count",
-      "event_date"
-    ],
+    "missing_required_fields": ["guest_count", "event_date"],
     "agent_message": "About how many guests are you expecting, and what date is the event planned for?"
   }
 }
@@ -224,6 +215,39 @@ A quote in this state has **not** been sent to the client chat.
 ---
 
 # 7. Get Job
+
+## `GET /jobs`
+
+Returns a list of all jobs.
+
+### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobs": [
+      {
+        "job_id": "job_123",
+        "state": "AWAITING_HUMAN_APPROVAL",
+        "clarification_round": 0,
+        "messages": [],
+        "extracted_fields": {
+          "event_type": "wedding",
+          "guest_count": 200,
+          "event_date": "2026-09-14",
+          "venue_location": "Lekki",
+          "budget_range": "~3000000 NGN"
+        },
+        "missing_required_fields": [],
+        "quote": {
+          "status": "DRAFT"
+        }
+      }
+    ]
+  }
+}
+```
 
 ## `GET /jobs/:id`
 
@@ -424,10 +448,7 @@ state = NEEDS_SME_INPUT
   "data": {
     "job_id": "job_123",
     "state": "NEEDS_SME_INPUT",
-    "missing_fields": [
-      "guest_count",
-      "event_date"
-    ],
+    "missing_fields": ["guest_count", "event_date"],
     "summary": "The client did not provide a usable guest count or specific event date after two clarification rounds.",
     "clarification_round": 2
   }
@@ -489,6 +510,7 @@ state = FAILED_RETRY
 The system should retry from the failed stage where possible.
 
 It should preserve:
+
 - messages;
 - successfully extracted fields;
 - clarification history;
@@ -522,17 +544,17 @@ FAILED_RETRY
 
 # 14. State Transition Rules
 
-| From | To | Trigger |
-|---|---|---|
-| `IDLE` | `INGESTING` | Client message received |
-| `CLARIFYING` | `INGESTING` | Client replies |
-| `INGESTING` | `REASONING` | Message stored |
-| `REASONING` | `CLARIFYING` | Required fields missing and clarification rounds remain |
-| `REASONING` | `NEEDS_SME_INPUT` | Required fields unresolved after two rounds |
-| `REASONING` | `AWAITING_HUMAN_APPROVAL` | Complete brief and quote generated |
-| Processing state | `FAILED_RETRY` | Recoverable failure |
-| `NEEDS_SME_INPUT` | `REASONING` | SME submits manual input |
-| `AWAITING_HUMAN_APPROVAL` | `EXECUTED` | SME approves and quote is simulated-sent |
+| From                      | To                        | Trigger                                                 |
+| ------------------------- | ------------------------- | ------------------------------------------------------- |
+| `IDLE`                    | `INGESTING`               | Client message received                                 |
+| `CLARIFYING`              | `INGESTING`               | Client replies                                          |
+| `INGESTING`               | `REASONING`               | Message stored                                          |
+| `REASONING`               | `CLARIFYING`              | Required fields missing and clarification rounds remain |
+| `REASONING`               | `NEEDS_SME_INPUT`         | Required fields unresolved after two rounds             |
+| `REASONING`               | `AWAITING_HUMAN_APPROVAL` | Complete brief and quote generated                      |
+| Processing state          | `FAILED_RETRY`            | Recoverable failure                                     |
+| `NEEDS_SME_INPUT`         | `REASONING`               | SME submits manual input                                |
+| `AWAITING_HUMAN_APPROVAL` | `EXECUTED`                | SME approves and quote is simulated-sent                |
 
 The state machine should reject invalid transitions.
 
@@ -677,17 +699,17 @@ RETRY_FAILED
 
 # 19. MVP Endpoint Summary
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `POST` | `/jobs` | Create job |
-| `POST` | `/jobs/:id/messages` | Send simulated client message and trigger agent |
-| `GET` | `/jobs/:id` | Get job state |
-| `GET` | `/jobs/:id/quote` | Get draft quote |
-| `PATCH` | `/jobs/:id/quote` | Edit draft quote |
-| `POST` | `/jobs/:id/approve_quote` | Approve and send quote |
-| `GET` | `/jobs/:id/missing_fields` | Get unresolved fields |
-| `POST` | `/jobs/:id/manual_input` | Supply missing values |
-| `POST` | `/jobs/:id/retry` | Retry recoverable failure |
+| Method  | Endpoint                   | Purpose                                         |
+| ------- | -------------------------- | ----------------------------------------------- |
+| `POST`  | `/jobs`                    | Create job                                      |
+| `POST`  | `/jobs/:id/messages`       | Send simulated client message and trigger agent |
+| `GET`   | `/jobs/:id`                | Get job state                                   |
+| `GET`   | `/jobs/:id/quote`          | Get draft quote                                 |
+| `PATCH` | `/jobs/:id/quote`          | Edit draft quote                                |
+| `POST`  | `/jobs/:id/approve_quote`  | Approve and send quote                          |
+| `GET`   | `/jobs/:id/missing_fields` | Get unresolved fields                           |
+| `POST`  | `/jobs/:id/manual_input`   | Supply missing values                           |
+| `POST`  | `/jobs/:id/retry`          | Retry recoverable failure                       |
 
 ---
 
@@ -725,6 +747,7 @@ Only explicit SME approval can send the quote
 ```
 
 This invariant must survive:
+
 - malformed input;
 - vague language;
 - corrections;

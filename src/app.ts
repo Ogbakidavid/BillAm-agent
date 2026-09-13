@@ -5,10 +5,18 @@
 
 import express, { Request, Response, NextFunction } from "express";
 import { jobsRouter } from "./api/jobs.routes";
+import { knowledgeRouter } from "./api/knowledge.routes";
+import { availabilityRouter } from "./api/availability.routes";
 import { AppError } from "./utils/errors";
 import { logger } from "./utils/logger";
+import cors from "cors";
+
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./docs/swagger.json";
 
 export const app = express();
+
+app.use(cors());
 
 app.use(express.json());
 
@@ -17,8 +25,14 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next();
 });
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.get("/", (_req: Request, res: Response) => {
+  res.send("BillAm Agent is running");
+});
+
 app.get("/health", (_req: Request, res: Response) => {
-  res.json({ 
+  res.json({
     status: "SUCCESS",
     data: {
       status: "healthy",
@@ -29,6 +43,9 @@ app.get("/health", (_req: Request, res: Response) => {
 });
 
 app.use("/jobs", jobsRouter);
+app.use("/knowledge", knowledgeRouter);
+app.use("/availability", availabilityRouter);
+
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({
@@ -50,7 +67,7 @@ app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
     });
   }
 
-  logger.error(`Unhandled error: ${err.message}`, { stack: err.stack});
+  logger.error(`Unhandled error: ${err.message}`, { stack: err.stack });
   return res.status(500).json({
     status: "FAILED_RETRY",
     errorCode: "INTERNAL_SERVER_ERROR",

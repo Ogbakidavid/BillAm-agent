@@ -1,0 +1,55 @@
+{
+  "business_type": "equipment_rental",
+  "currency": "NGN",
+  "version": "1.0",
+  "description": "Mock price catalog for AV/equipment rental SME demo.",
+  "pricing_tiers": { "tiers": ["lean", "standard", "premium"] },
+  "line_items": [
+    {
+      "item_id": "generator_per_day",
+      "label": "Generator Rental (Per Day)",
+      "applies_when": "equipment_needed includes generator",
+      "pricing_basis": "per_day",
+      "unit_price": { "lean": 45000, "standard": 75000, "premium": 130000 }
+    },
+    {
+      "item_id": "pa_system_per_day",
+      "label": "PA System Rental (Per Day)",
+      "applies_when": "equipment_needed includes PA or sound",
+      "pricing_basis": "per_day",
+      "unit_price": { "lean": 35000, "standard": 65000, "premium": 120000 }
+    },
+    {
+      "item_id": "canopy_per_unit",
+      "label": "Canopy / Tent (Per Unit)",
+      "applies_when": "equipment_needed includes canopy or tent",
+      "pricing_basis": "per_unit",
+      "unit_price": { "lean": 25000, "standard": 40000, "premium": 70000 }
+    },
+    {
+      "item_id": "setup_takedown",
+      "label": "Setup & Takedown",
+      "applies_when": "setup_required == true",
+      "pricing_basis": "flat",
+      "unit_price": { "lean": 20000, "standard": 35000, "premium": 60000 }
+    },
+    {
+      "item_id": "operator_per_day",
+      "label": "Equipment Operator (Per Day)",
+      "applies_when": "operator_needed == true",
+      "pricing_basis": "per_day",
+      "unit_price": { "lean": 15000, "standard": 25000, "premium": 45000 }
+    }
+  ],
+  "contingencies": [
+    {
+      "contingency_id": "transport_logistics",
+      "label": "Transport & Delivery",
+      "value": { "type": "percentage_of_subtotal", "amount": 0.1 }
+    }
+  ],
+  "quote_terms": {
+    "validity_period_days": 3,
+    "default_payment_terms": "Full payment required before delivery."
+  }
+}

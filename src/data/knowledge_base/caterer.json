@@ -1,0 +1,91 @@
+{
+  "business_type": "caterer",
+  "version": "1.0",
+  "description": "Required/optional field schema for Nigerian catering SMEs. Used by parse_client_brief and generate_clarifying_questions.",
+  "required_fields": [
+    {
+      "field_id": "event_type",
+      "label": "Event Type",
+      "type": "enum",
+      "options": [
+        "wedding",
+        "birthday",
+        "corporate",
+        "burial/funeral",
+        "child_dedication",
+        "other"
+      ],
+      "clarifying_question_templates": [
+        "What kind of event are we catering for?"
+      ]
+    },
+    {
+      "field_id": "guest_count",
+      "label": "Guest Count",
+      "type": "integer",
+      "validation": { "min": 1, "max": 5000 },
+      "clarifying_question_templates": [
+        "Roughly how many guests will be eating?"
+      ]
+    },
+    {
+      "field_id": "event_date",
+      "label": "Event Date",
+      "type": "date",
+      "clarifying_question_templates": ["What date is the event?"]
+    },
+    {
+      "field_id": "venue_location",
+      "label": "Venue / Location",
+      "type": "string",
+      "clarifying_question_templates": ["Where will the event be held?"]
+    },
+    {
+      "field_id": "meal_type",
+      "label": "Meal Type",
+      "type": "enum",
+      "options": ["buffet", "plated", "cocktail", "small_chops_only"],
+      "clarifying_question_templates": [
+        "Would you prefer a buffet, plated service, or cocktail-style?"
+      ]
+    }
+  ],
+  "optional_fields": [
+    {
+      "field_id": "dietary_requirements",
+      "label": "Dietary Requirements",
+      "type": "string",
+      "clarifying_question_templates": [
+        "Any dietary restrictions or special meal needs?"
+      ]
+    },
+    {
+      "field_id": "drinks_included",
+      "label": "Drinks Included",
+      "type": "boolean",
+      "clarifying_question_templates": [
+        "Should we include drinks in the package?"
+      ]
+    }
+  ],
+  "field_completeness_rules": {
+    "required_for_quote": [
+      "event_type",
+      "guest_count",
+      "event_date",
+      "venue_location",
+      "meal_type"
+    ],
+    "notes": "All required fields must be present before a quote can be computed."
+  },
+  "ambiguity_handling": {
+    "vague_quantifiers_not_accepted": [
+      "small",
+      "big",
+      "plenty",
+      "a lot",
+      "not too many"
+    ],
+    "note": "Treat vague guest count as missing. Ask for an estimate."
+  }
+}

@@ -1,0 +1,788 @@
+{
+  "info": {
+    "_postman_id": "billam-agent-e2e-v2",
+    "name": "BillAm Agent API — E2E Scenarios V2",
+    "description": "Full E2E test collection for BillAm Agent V2 (Strands SDK). Run pnpm dev first. Each scenario auto-captures job_id. Hit Send in order.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001", "type": "string" },
+    { "key": "s1_job_id", "value": "", "type": "string" },
+    { "key": "s2_job_id", "value": "", "type": "string" },
+    { "key": "s3_job_id", "value": "", "type": "string" },
+    { "key": "s4_job_id", "value": "", "type": "string" },
+    { "key": "s5_job_id", "value": "", "type": "string" },
+    { "key": "job_id", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🟢 Scenario 1: Happy Path — Complete Wedding Brief",
+      "description": "All 5 required fields in one message. Agent skips clarification and generates quote. SME approves → EXECUTED.",
+      "item": [
+        {
+          "name": "1.1 Create Wedding Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('State is IDLE', () => pm.expect(data.state).to.eql('IDLE'));",
+                  "pm.collectionVariables.set('s1_job_id', data.job_id);",
+                  "pm.collectionVariables.set('job_id', data.job_id);",
+                  "console.log('S1 Job ID:', data.job_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Send Complete Wedding Brief",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('State is AWAITING_HUMAN_APPROVAL', () => pm.expect(data.state).to.eql('AWAITING_HUMAN_APPROVAL'));",
+                  "pm.test('Quote is not null', () => pm.expect(data.quote).to.not.be.null);",
+                  "pm.test('No missing required fields', () => pm.expect(data.missing_required_fields).to.have.lengthOf(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"Good afternoon! I am planning my daughter's wedding, we are expecting about 150 guests. It will hold on the 14th of next month, outdoors at our family compound in Lekki. Budget is around 3 million naira, we want it done nicely but not over the top.\",\n  \"received_at\": \"2026-09-02T12:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s1_job_id}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s1_job_id}}", "messages"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Get Draft Quote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('Quote status is draft', () => pm.expect(data.status).to.eql('draft'));",
+                  "pm.test('Has line items', () => pm.expect(data.line_items).to.be.an('array').that.is.not.empty);",
+                  "pm.test('Total > 0', () => pm.expect(data.total).to.be.above(0));",
+                  "console.log('Quote total:', data.total, data.currency);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s1_job_id}}/quote",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s1_job_id}}", "quote"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 Approve & Send Quote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('State is EXECUTED', () => pm.expect(data.state).to.eql('EXECUTED'));",
+                  "pm.test('Quote status is SENT', () => pm.expect(data.quote.status).to.eql('SENT'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"approved_by\": \"sme_owner_david\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s1_job_id}}/approve_quote",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s1_job_id}}", "approve_quote"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔵 Scenario 2: Clarification Flow — Vague Pidgin Brief",
+      "description": "Missing guest_count → Agent clarifies → Client replies → Quote generated.",
+      "item": [
+        {
+          "name": "2.1 Create Baby Shower Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json().data;",
+                  "pm.collectionVariables.set('s2_job_id', data.job_id);",
+                  "console.log('S2 Job ID:', data.job_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_002\",\n  \"business_type\": \"event_vendor\"\n}" },
+            "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Send Vague Brief (Missing guest_count)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('State is CLARIFYING', () => pm.expect(data.state).to.eql('CLARIFYING'));",
+                  "pm.test('Clarification round is 1', () => pm.expect(data.clarification_round).to.eql(1));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"Hello good day, I dey plan small baby shower for my sister. Budget is around 300k, venue na for Ikeja hall last weekend of next month.\",\n  \"received_at\": \"2026-09-02T12:05:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s2_job_id}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s2_job_id}}", "messages"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Inspect Job — Verify Agent Clarification Message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "const agentMsgs = data.messages.filter(m => m.sender === 'agent');",
+                  "pm.test('Agent sent clarification', () => pm.expect(agentMsgs.length).to.be.above(0));",
+                  "console.log('Agent message:', agentMsgs[0]?.text);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s2_job_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s2_job_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.4 Client Replies with Guest Count",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('State is AWAITING_HUMAN_APPROVAL', () => pm.expect(data.state).to.eql('AWAITING_HUMAN_APPROVAL'));",
+                  "pm.test('guest_count extracted', () => pm.expect(data.extracted_fields.guest_count).to.exist);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"Ah sorry, forgot to mention - it's for about 40 people.\",\n  \"received_at\": \"2026-09-02T12:10:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s2_job_id}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s2_job_id}}", "messages"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.5 Get Baby Shower Quote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('Quote exists with total > 0', () => pm.expect(data.total).to.be.above(0));",
+                  "console.log('Baby shower quote total:', data.total);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s2_job_id}}/quote",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s2_job_id}}", "quote"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🟡 Scenario 3: SME Edit Flow — Corporate Launch",
+      "description": "Complete corporate brief → Agent quotes → SME edits line items → SME approves → EXECUTED.",
+      "item": [
+        {
+          "name": "3.1 Create Corporate Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json().data;",
+                  "pm.collectionVariables.set('s3_job_id', data.job_id);",
+                  "console.log('S3 Job ID:', data.job_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_003\",\n  \"business_type\": \"event_vendor\"\n}" },
+            "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 Send Corporate Brief",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('State is AWAITING_HUMAN_APPROVAL', () => pm.expect(data.state).to.eql('AWAITING_HUMAN_APPROVAL'));",
+                  "console.log('Initial quote total:', data.quote?.total);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"Hello, we are planning our corporate product launch event for around 80 attendees. It will take place on the 2nd Friday of next month at our office premises in Victoria Island. Budget is roughly 500,000 Naira.\",\n  \"received_at\": \"2026-09-02T12:15:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s3_job_id}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s3_job_id}}", "messages"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.3 Get Initial Quote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('Quote is draft', () => pm.expect(data.status).to.eql('draft'));",
+                  "console.log('Pre-edit quote total:', data.total);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s3_job_id}}/quote",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s3_job_id}}", "quote"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.4 SME Edit Quote Line Items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "console.log('Post-edit quote:', JSON.stringify(pm.response.json().data?.quote?.total));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"line_items\": [\n    {\n      \"name\": \"Corporate Stage & Backdrop Setup\",\n      \"quantity\": 1,\n      \"unit_price\": 200000,\n      \"total\": 200000\n    },\n    {\n      \"name\": \"Banquet Chairs & Cocktails (80 guests)\",\n      \"quantity\": 80,\n      \"unit_price\": 1000,\n      \"total\": 80000\n    }\n  ],\n  \"notes\": \"Applied negotiated corporate client discount\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s3_job_id}}/quote",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s3_job_id}}", "quote"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.5 Approve & Send Edited Quote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('State is EXECUTED', () => pm.expect(data.state).to.eql('EXECUTED'));",
+                  "pm.test('Quote is SENT', () => pm.expect(data.quote.status).to.eql('SENT'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"approved_by\": \"sme_owner_david\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s3_job_id}}/approve_quote",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s3_job_id}}", "approve_quote"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔴 Scenario 4: Safeguard — Infeasible Budget",
+      "description": "500 guests, ₦150k budget → Agent enforces feasibility safeguard → FAILED_RETRY → Retry.",
+      "item": [
+        {
+          "name": "4.1 Create Infeasible Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json().data;",
+                  "pm.collectionVariables.set('s4_job_id', data.job_id);",
+                  "console.log('S4 Job ID:', data.job_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_004\",\n  \"business_type\": \"event_vendor\"\n}" },
+            "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 Send Infeasible Brief",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('State is FAILED_RETRY', () => pm.expect(data.state).to.eql('FAILED_RETRY'));",
+                  "pm.test('Quote is null', () => pm.expect(data.quote).to.be.null);",
+                  "pm.test('Error message exists', () => pm.expect(data.error_message).to.not.be.null);",
+                  "console.log('Error message:', data.error_message);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"I want a full wedding setup for 500 guests, premium decor, live band, the works. Date is in 10 days. My budget is 150k total though, that is all I have, please make it work.\",\n  \"received_at\": \"2026-09-02T12:20:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s4_job_id}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s4_job_id}}", "messages"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.3 Inspect Job — Verify FAILED_RETRY Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('State still FAILED_RETRY', () => pm.expect(data.state).to.eql('FAILED_RETRY'));",
+                  "pm.test('No quote', () => pm.expect(data.quote).to.be.null);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s4_job_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s4_job_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.4 Retry Failed Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('retry_started is true', () => pm.expect(data.retry_started).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s4_job_id}}/retry",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s4_job_id}}", "retry"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🟠 Scenario 5: SME Recovery — NEEDS_SME_INPUT",
+      "description": "Two rounds of vague clarifications exhaust the cap → NEEDS_SME_INPUT → SME supplies values → Agent quotes.",
+      "item": [
+        {
+          "name": "5.1 Create Recovery Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json().data;",
+                  "pm.collectionVariables.set('s5_job_id', data.job_id);",
+                  "console.log('S5 Job ID:', data.job_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_005\",\n  \"business_type\": \"event_vendor\"\n}" },
+            "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
+          },
+          "response": []
+        },
+        {
+          "name": "5.2 Send Vague First Message (Round 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('State is CLARIFYING (round 1)', () => pm.expect(data.state).to.eql('CLARIFYING'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"I need decor for an event, not sure of the details yet.\",\n  \"received_at\": \"2026-09-02T13:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s5_job_id}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s5_job_id}}", "messages"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.3 Client Replies Vaguely (Round 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('Still CLARIFYING or escalated', () => pm.expect(['CLARIFYING','NEEDS_SME_INPUT']).to.include(data.state));",
+                  "console.log('State after round 2:', data.state);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"I will confirm later, just plan for a generic event.\",\n  \"received_at\": \"2026-09-02T13:05:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s5_job_id}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s5_job_id}}", "messages"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.4 Get Missing Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('Missing fields listed', () => pm.expect(data.missing_fields).to.be.an('array').that.is.not.empty);",
+                  "console.log('Missing fields:', data.missing_fields);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s5_job_id}}/missing_fields",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s5_job_id}}", "missing_fields"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.5 SME Supplies Missing Values",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "console.log('State after manual input:', pm.response.json().data?.state);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplied_fields\": {\n    \"guest_count\": 60,\n    \"event_date\": \"2026-10-25\",\n    \"venue_location\": \"Abuja\",\n    \"event_type\": \"birthday\",\n    \"budget_range\": \"250000\"\n  },\n  \"source\": \"SME called client and confirmed details\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s5_job_id}}/manual_input",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s5_job_id}}", "manual_input"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.6 Get Quote After Recovery",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('Quote exists after recovery', () => pm.expect(data).to.not.be.null);",
+                  "console.log('Recovery quote total:', data.total);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s5_job_id}}/quote",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s5_job_id}}", "quote"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "⚙️ API Reference & Utilities",
+      "description": "Individual endpoints for spot-testing.",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Job by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{job_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{job_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Security: Approve in Wrong State (should 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Should return 409 conflict', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"approved_by\": \"attacker\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{s2_job_id}}/approve_quote",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{s2_job_id}}", "approve_quote"],
+              "description": "Use s2_job_id which should still be in CLARIFYING after step 2.2 — approve should be rejected."
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

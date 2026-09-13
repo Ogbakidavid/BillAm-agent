@@ -1,0 +1,41 @@
+{
+  "business_type": "photographer",
+  "currency": "NGN",
+  "version": "1.0",
+  "description": "Mock price catalog for photography/videography SME demo.",
+  "pricing_tiers": { "tiers": ["lean", "standard", "premium"] },
+  "line_items": [
+    {
+      "item_id": "photography_per_hour",
+      "label": "Photography Coverage (Per Hour)",
+      "applies_when": "always",
+      "pricing_basis": "per_hour",
+      "unit_price": { "lean": 20000, "standard": 40000, "premium": 80000 }
+    },
+    {
+      "item_id": "videography_per_hour",
+      "label": "Videography Coverage (Per Hour)",
+      "applies_when": "videography_needed == true",
+      "pricing_basis": "per_hour",
+      "unit_price": { "lean": 25000, "standard": 50000, "premium": 100000 }
+    },
+    {
+      "item_id": "photo_editing",
+      "label": "Photo Editing & Delivery",
+      "applies_when": "always",
+      "pricing_basis": "flat",
+      "unit_price": { "lean": 30000, "standard": 60000, "premium": 120000 }
+    }
+  ],
+  "contingencies": [
+    {
+      "contingency_id": "transport_logistics",
+      "label": "Transport & Logistics",
+      "value": { "type": "percentage_of_subtotal", "amount": 0.08 }
+    }
+  ],
+  "quote_terms": {
+    "validity_period_days": 7,
+    "default_payment_terms": "50% deposit to confirm date, balance due on event day."
+  }
+}
