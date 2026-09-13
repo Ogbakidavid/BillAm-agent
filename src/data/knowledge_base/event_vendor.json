@@ -2,7 +2,6 @@
   "business_type": "event_vendor",
   "version": "1.0",
   "description": "Required/optional field schema for Nigerian event-vendor SMEs (decor, planning, logistics for weddings, parties, corporate events). Used by parse_client_brief to detect what's present/missing in a client brief, and by generate_clarifying_questions to know which fields to ask about and how.",
-
   "required_fields": [
     {
       "field_id": "event_type",
@@ -33,7 +32,10 @@
       "label": "Guest Count",
       "description": "Expected number of attendees. Primary driver of seating, catering-adjacent, and space-rental line items.",
       "type": "integer",
-      "validation": { "min": 1, "max": 5000 },
+      "validation": {
+        "min": 1,
+        "max": 5000
+      },
       "extraction_hints": [
         "Client may give a range ('100-150 people') — store as a range or take the upper bound depending on downstream pricing logic; flag ranges for the agent's reasoning notes",
         "Vague quantifiers like 'small', 'intimate', 'plenty of people' should NOT be auto-converted to a number — treat as missing and ask for a number"
@@ -64,11 +66,13 @@
       "type": "string",
       "extraction_hints": [
         "Accept either a specific venue name ('Eko Hotel', 'my compound in Ikeja') or a general area if venue isn't booked yet ('somewhere in Lekki')",
-        "If client says venue is 'not yet decided,' treat this field as present but flagged 'venue_tbd: true' rather than missing — don't re-ask, note it in the quote as a placeholder assumption"
+        "If client says venue is 'not yet decided,' treat this field as present but flagged 'venue_tbd: true' rather than missing — don't re-ask, note it in the quote as a placeholder assumption",
+        "This is different from format ambiguity: if the client mentions a physical place alongside 'online', 'virtual', or similar ('Lekki, or maybe online sha'), do NOT default to either option. Treat this as unresolved and ask which it will be — an in-person, online event affects nearly every physical line item (tent, chairs, generator, decor) and must never be assumed"
       ],
       "clarifying_question_templates": [
         "Where will the event be held — do you have a venue yet?",
-        "What area or venue are you planning for?"
+        "What area or venue are you planning for?",
+        "Just to confirm, will this be an in-person event at {mentioned_location}, or are you thinking of hosting it online?"
       ]
     },
     {
@@ -86,7 +90,6 @@
       ]
     }
   ],
-
   "optional_fields": [
     {
       "field_id": "event_duration",
@@ -102,7 +105,11 @@
       "label": "Indoor or Outdoor",
       "description": "Affects whether canopy/tent, generator, and weather-contingency line items apply.",
       "type": "enum",
-      "options": ["indoor", "outdoor", "both"],
+      "options": [
+        "indoor",
+        "outdoor",
+        "both"
+      ],
       "clarifying_question_templates": [
         "Will this be indoors, outdoors, or a mix of both?"
       ]
@@ -144,7 +151,6 @@
       ]
     }
   ],
-
   "field_completeness_rules": {
     "required_for_quote": [
       "event_type",
@@ -155,7 +161,6 @@
     ],
     "notes": "A brief is considered complete for compute_quote once all fields in required_for_quote are present (including 'present but flagged' states like venue_tbd or vague-budget). Optional fields never block quote generation — the agent should proceed with reasonable defaults and note any assumptions in the quote's terms."
   },
-
   "ambiguity_handling": {
     "vague_quantifiers_not_accepted": [
       "small",

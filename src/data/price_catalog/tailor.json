@@ -1,0 +1,41 @@
+{
+  "business_type": "tailor",
+  "currency": "NGN",
+  "version": "1.0",
+  "description": "Mock price catalog for tailoring/fashion SME demo.",
+  "pricing_tiers": { "tiers": ["lean", "standard", "premium"] },
+  "line_items": [
+    {
+      "item_id": "sewing_per_piece",
+      "label": "Sewing (Per Piece)",
+      "applies_when": "always",
+      "pricing_basis": "per_piece",
+      "unit_price": { "lean": 8000, "standard": 20000, "premium": 50000 }
+    },
+    {
+      "item_id": "fabric_sourcing",
+      "label": "Fabric Sourcing",
+      "applies_when": "fabric_supplied == false",
+      "pricing_basis": "per_piece",
+      "unit_price": { "lean": 5000, "standard": 12000, "premium": 30000 }
+    },
+    {
+      "item_id": "embroidery",
+      "label": "Embroidery / Embellishment",
+      "applies_when": "embroidery_needed == true",
+      "pricing_basis": "per_piece",
+      "unit_price": { "lean": 3000, "standard": 7000, "premium": 20000 }
+    }
+  ],
+  "contingencies": [
+    {
+      "contingency_id": "rush_fee",
+      "label": "Rush Fee",
+      "value": { "type": "percentage_of_subtotal", "amount": 0.2 }
+    }
+  ],
+  "quote_terms": {
+    "validity_period_days": 7,
+    "default_payment_terms": "Full payment required before work begins."
+  }
+}

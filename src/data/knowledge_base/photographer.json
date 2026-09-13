@@ -1,0 +1,75 @@
+{
+  "business_type": "photographer",
+  "version": "1.0",
+  "description": "Required/optional field schema for Nigerian photography/videography SMEs.",
+  "required_fields": [
+    {
+      "field_id": "event_type",
+      "label": "Event Type",
+      "type": "enum",
+      "options": [
+        "wedding",
+        "birthday",
+        "corporate",
+        "portrait_session",
+        "product_shoot",
+        "other"
+      ],
+      "clarifying_question_templates": [
+        "What kind of shoot or event is this for?"
+      ]
+    },
+    {
+      "field_id": "event_date",
+      "label": "Event Date",
+      "type": "date",
+      "clarifying_question_templates": ["What date is the shoot or event?"]
+    },
+    {
+      "field_id": "venue_location",
+      "label": "Venue / Location",
+      "type": "string",
+      "clarifying_question_templates": ["Where will the shoot take place?"]
+    },
+    {
+      "field_id": "coverage_hours",
+      "label": "Coverage Duration (Hours)",
+      "type": "integer",
+      "validation": { "min": 1, "max": 24 },
+      "clarifying_question_templates": [
+        "How many hours of coverage do you need?"
+      ]
+    }
+  ],
+  "optional_fields": [
+    {
+      "field_id": "videography_needed",
+      "label": "Videography Needed",
+      "type": "boolean",
+      "clarifying_question_templates": [
+        "Should we include video coverage as well?"
+      ]
+    },
+    {
+      "field_id": "photo_editing_turnaround",
+      "label": "Editing Turnaround",
+      "type": "string",
+      "clarifying_question_templates": [
+        "How soon do you need the edited photos delivered?"
+      ]
+    }
+  ],
+  "field_completeness_rules": {
+    "required_for_quote": [
+      "event_type",
+      "event_date",
+      "venue_location",
+      "coverage_hours"
+    ],
+    "notes": "All required fields must be present before a quote can be computed."
+  },
+  "ambiguity_handling": {
+    "vague_quantifiers_not_accepted": ["a while", "a few hours", "all day"],
+    "note": "Treat vague coverage duration as missing."
+  }
+}

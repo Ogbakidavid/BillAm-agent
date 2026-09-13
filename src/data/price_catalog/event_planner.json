@@ -1,0 +1,43 @@
+{
+  "business_type": "event_planner",
+  "currency": "NGN",
+  "version": "1.0",
+  "description": "Mock price catalog for full-service event planning SME demo.",
+  "pricing_tiers": { "tiers": ["lean", "standard", "premium"] },
+  "line_items": [
+    {
+      "item_id": "planning_coordination",
+      "label": "Event Planning & Coordination",
+      "applies_when": "always",
+      "pricing_basis": "flat_by_guest_band",
+      "unit_price": {
+        "lean": { "0-100": 100000, "101-300": 200000, "301+": 350000 },
+        "standard": { "0-100": 200000, "101-300": 400000, "301+": 700000 },
+        "premium": { "0-100": 400000, "101-300": 800000, "301+": 1500000 }
+      }
+    },
+    {
+      "item_id": "vendor_sourcing",
+      "label": "Vendor Sourcing & Management",
+      "applies_when": "always",
+      "pricing_basis": "flat",
+      "unit_price": { "lean": 50000, "standard": 100000, "premium": 250000 }
+    }
+  ],
+  "contingencies": [
+    {
+      "contingency_id": "transport_logistics",
+      "label": "Transport & Logistics",
+      "value": { "type": "percentage_of_subtotal", "amount": 0.08 }
+    },
+    {
+      "contingency_id": "fuel_price_buffer",
+      "label": "Fuel/Fluctuation Buffer",
+      "value": { "type": "percentage_of_subtotal", "amount": 0.05 }
+    }
+  ],
+  "quote_terms": {
+    "validity_period_days": 7,
+    "default_payment_terms": "40% deposit to confirm, 30% at mid-planning, balance due 1 week before event."
+  }
+}

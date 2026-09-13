@@ -1,0 +1,82 @@
+{
+  "business_type": "event_planner",
+  "version": "1.0",
+  "description": "Required/optional field schema for Nigerian full-service event planning SMEs.",
+  "required_fields": [
+    {
+      "field_id": "event_type",
+      "label": "Event Type",
+      "type": "enum",
+      "options": [
+        "wedding",
+        "corporate",
+        "birthday",
+        "product_launch",
+        "conference",
+        "other"
+      ],
+      "clarifying_question_templates": ["What kind of event are you planning?"]
+    },
+    {
+      "field_id": "guest_count",
+      "label": "Guest Count",
+      "type": "integer",
+      "validation": { "min": 1, "max": 10000 },
+      "clarifying_question_templates": ["Roughly how many guests are expected?"]
+    },
+    {
+      "field_id": "event_date",
+      "label": "Event Date",
+      "type": "date",
+      "clarifying_question_templates": ["What date is the event?"]
+    },
+    {
+      "field_id": "venue_location",
+      "label": "Venue / Location",
+      "type": "string",
+      "clarifying_question_templates": [
+        "Do you have a venue in mind, or do you need help sourcing one?"
+      ]
+    },
+    {
+      "field_id": "budget_range",
+      "label": "Budget Range",
+      "type": "string",
+      "clarifying_question_templates": [
+        "What budget are you working with for this event?"
+      ]
+    }
+  ],
+  "optional_fields": [
+    {
+      "field_id": "theme",
+      "label": "Event Theme",
+      "type": "string",
+      "clarifying_question_templates": [
+        "Do you have a theme or aesthetic in mind?"
+      ]
+    },
+    {
+      "field_id": "vendors_already_booked",
+      "label": "Vendors Already Booked",
+      "type": "string",
+      "clarifying_question_templates": [
+        "Have you already booked any vendors (caterer, DJ, photographer)?"
+      ]
+    }
+  ],
+  "field_completeness_rules": {
+    "required_for_quote": [
+      "event_type",
+      "guest_count",
+      "event_date",
+      "venue_location",
+      "budget_range"
+    ],
+    "notes": "All required fields must be present before a quote can be computed."
+  },
+  "ambiguity_handling": {
+    "vague_quantifiers_not_accepted": ["small", "big", "plenty"],
+    "note": "Treat vague guest count as missing."
+  }
+}

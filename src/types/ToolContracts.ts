@@ -6,11 +6,14 @@
  * Source: PRD v0.4 Section 4 (Tool Contracts)
  */
 
+import { BusinessType } from "./Job";
+
+
 // ==================== ingest_chat_message ====================
 export interface IngestChatMessageInput {
   job_id?: string;
   message_text: string;
-  business_type: "caterer" | "tailor" | "event_vendor";
+  business_type: BusinessType;
   received_at: string;
 }
 
@@ -24,7 +27,7 @@ export interface IngestChatMessageOutput {
 export interface ParseClientBriefInput {
   job_id: string;
   message_text: string;
-  business_type: "caterer" | "tailor" | "event_vendor";
+  business_type: BusinessType;
   existing_fields?: Record<string, any>;
 }
 
@@ -40,7 +43,7 @@ export interface ParseClientBriefOutput {
 export interface GenerateClarifyingQuestionsInput {
   job_id: string;
   missing_required_fields: string[];
-  business_type: "caterer" | "tailor" | "event_vendor";
+  business_type: BusinessType;
   clarification_round: number;
 }
 
@@ -56,7 +59,7 @@ export interface GenerateClarifyingQuestionsOutput {
 export interface ComputeQuoteInput {
   job_id: string;
   structured_brief: Record<string, any>;
-  business_type: "caterer" | "tailor" | "event_vendor";
+  business_type: BusinessType;
 }
 
 export interface ComputeQuoteOutput {
@@ -71,6 +74,7 @@ export interface ComputeQuoteOutput {
   }>;
   total_amount: number;
   validity_period_days: number;
+  draft_message_to_client?: string;
   status: "SUCCESS" | "FAILED_RETRY";
   error: string | null;
 }

@@ -1,0 +1,976 @@
+{
+  "info": {
+    "_postman_id": "billam-agent-e2e-v1",
+    "name": "BillAm Agent API - E2E Live Scenarios & API Reference",
+    "description": "Comprehensive Postman collection for BillAm Agent. Contains folders for all 4 live E2E test scenarios matching the integration engineer's verified test suite, plus individual REST API reference endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "scenario_1_job_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "scenario_2_job_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "scenario_3_job_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "scenario_4_job_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "📁 Scenario 1: Happy Path Wedding (Complete Brief)",
+      "description": "Live E2E flow: 150 guests, complete brief -> real quote generated (~₦1,926,650) -> SME approval -> EXECUTED.",
+      "item": [
+        {
+          "name": "1.1 Create Wedding Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json().data;",
+                  "    pm.collectionVariables.set('scenario_1_job_id', data.job_id);",
+                  "    pm.collectionVariables.set('job_id', data.job_id);",
+                  "    console.log('Scenario 1 Job ID:', data.job_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            },
+            "description": "Initializes a new job session for the wedding scenario."
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Send Complete Wedding Brief",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"Good afternoon! I am planning my daughter's wedding, we are expecting about 150 guests. It will hold on the 14th of next month, outdoors at our family compound in Lekki. Budget is around 3 million naira, we want it done nicely but not over the top.\",\n  \"received_at\": \"2026-09-02T12:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_1_job_id}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_1_job_id}}",
+                "messages"
+              ]
+            },
+            "description": "Sends full brief with all 5 required fields. Agent should transition directly to AWAITING_HUMAN_APPROVAL."
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Get Generated Wedding Quote",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_1_job_id}}/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_1_job_id}}",
+                "quote"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
+            },
+            "description": "Inspects the generated draft quote (expecting real price calculation around ₦1,926,650)."
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 Approve & Send Wedding Quote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved_by\": \"sme_owner_david\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_1_job_id}}/approve_quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_1_job_id}}",
+                "approve_quote"
+              ]
+            },
+            "description": "SME approves quote. Job transitions to EXECUTED and quote status becomes SENT."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 Scenario 2: Vague Pidgin Brief (Clarification Flow)",
+      "description": "Live E2E flow: Vague Pidgin brief missing guest_count -> Agent generates clean clarifying questions -> Client replies -> Quote generated.",
+      "item": [
+        {
+          "name": "2.1 Create Baby Shower Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json().data;",
+                  "    pm.collectionVariables.set('scenario_2_job_id', data.job_id);",
+                  "    pm.collectionVariables.set('job_id', data.job_id);",
+                  "    console.log('Scenario 2 Job ID:', data.job_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Send Initial Vague Brief (Missing Guest Count)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"Hello good day, I dey plan small baby shower for my sister. Budget is around 300k, venue na for Ikeja hall last weekend of next month.\",\n  \"received_at\": \"2026-09-02T12:05:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_2_job_id}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_2_job_id}}",
+                "messages"
+              ]
+            },
+            "description": "Agent should detect missing guest_count and transition to CLARIFYING with questions."
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Inspect Job State (Verify CLARIFYING)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_2_job_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_2_job_id}}"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
+            },
+            "description": "Verifies state is CLARIFYING and clarification questions were appended."
+          },
+          "response": []
+        },
+        {
+          "name": "2.4 Send Clarification Reply (Guest Count = 40)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"Ah sorry, forgot to mention - it's for about 40 people.\",\n  \"received_at\": \"2026-09-02T12:10:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_2_job_id}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_2_job_id}}",
+                "messages"
+              ]
+            },
+            "description": "Resolves the missing field. Agent should now transition to AWAITING_HUMAN_APPROVAL."
+          },
+          "response": []
+        },
+        {
+          "name": "2.5 Get Generated Baby Shower Quote",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_2_job_id}}/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_2_job_id}}",
+                "quote"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
+            },
+            "description": "Verifies quote was generated for 40 guests."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 Scenario 3: Corporate Launch (Quote Revision Flow)",
+      "description": "Live E2E flow: 80 guests corporate launch -> Quote generated (~₦349,170) -> SME modifies quote -> SME approves.",
+      "item": [
+        {
+          "name": "3.1 Create Corporate Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json().data;",
+                  "    pm.collectionVariables.set('scenario_3_job_id', data.job_id);",
+                  "    pm.collectionVariables.set('job_id', data.job_id);",
+                  "    console.log('Scenario 3 Job ID:', data.job_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 Send Corporate Launch Brief",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"Hello, we are planning our corporate product launch event for around 80 attendees. It will take place on the 2nd Friday of next month at our office premises in Victoria Island. Budget is roughly 500,000 Naira.\",\n  \"received_at\": \"2026-09-02T12:15:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_3_job_id}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_3_job_id}}",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.3 Get Initial Corporate Quote",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_3_job_id}}/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_3_job_id}}",
+                "quote"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
+            },
+            "description": "Inspects initial quote total (expecting ~₦349,170)."
+          },
+          "response": []
+        },
+        {
+          "name": "3.4 SME Edit Quote Line Items",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"line_items\": [\n    {\n      \"name\": \"Corporate Stage & Backdrop Setup\",\n      \"quantity\": 1,\n      \"unit_price\": 200000,\n      \"total\": 200000\n    },\n    {\n      \"name\": \"Banquet Chairs & Cocktails (80 guests)\",\n      \"quantity\": 80,\n      \"unit_price\": 1000,\n      \"total\": 80000\n    }\n  ],\n  \"notes\": \"Applied negotiated corporate client discount\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_3_job_id}}/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_3_job_id}}",
+                "quote"
+              ]
+            },
+            "description": "SME modifies pricing before approving."
+          },
+          "response": []
+        },
+        {
+          "name": "3.5 SME Approve & Send Edited Quote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved_by\": \"sme_owner_david\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_3_job_id}}/approve_quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_3_job_id}}",
+                "approve_quote"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 Scenario 4: Infeasible / Malicious Budget (Safeguard Refusal Flow)",
+      "description": "Live E2E flow: 500 guests with ₦150k budget -> System enforces safeguard, refuses normal quote, transitions to FAILED_RETRY with real refusal error.",
+      "item": [
+        {
+          "name": "4.1 Create Infeasible Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json().data;",
+                  "    pm.collectionVariables.set('scenario_4_job_id', data.job_id);",
+                  "    pm.collectionVariables.set('job_id', data.job_id);",
+                  "    console.log('Scenario 4 Job ID:', data.job_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 Send Infeasible Request (500 guests, 150k budget)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"I want a full wedding setup for 500 guests, premium decor, live band, the works. Date is in 10 days. My budget is 150k total though, that is all I have, please make it work.\",\n  \"received_at\": \"2026-09-02T12:20:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_4_job_id}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_4_job_id}}",
+                "messages"
+              ]
+            },
+            "description": "Agent must detect unrealistic scope vs budget, refuse quote generation, and transition to FAILED_RETRY."
+          },
+          "response": []
+        },
+        {
+          "name": "4.3 Inspect Job (Verify FAILED_RETRY & Error Message)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{scenario_4_job_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{scenario_4_job_id}}"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
+            },
+            "description": "Verifies state is FAILED_RETRY, quote is null, and error_message explains the budget/scope mismatch."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 5. Base REST API Reference",
+      "description": "Individual endpoints for direct testing.",
+      "item": [
+        {
+          "name": "0. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1. Create Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.job_id) {",
+                  "        pm.collectionVariables.set('job_id', jsonData.data.job_id);",
+                  "        console.log('Saved job_id:', jsonData.data.job_id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Send Client Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_text\": \"Hello, I am planning a wedding for about 150 guests on November 20th in Lekki. Our budget is around 2 million Naira.\",\n  \"received_at\": \"2026-09-02T10:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{job_id}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Job Details & State",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{job_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get Generated Draft Quote",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{job_id}}/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "quote"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. SME Edit Draft Quote",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"line_items\": [\n    {\n      \"name\": \"Chairs & Tables Package\",\n      \"quantity\": 150,\n      \"unit_price\": 600,\n      \"total\": 90000\n    },\n    {\n      \"name\": \"Venue Decor Tiers\",\n      \"quantity\": 1,\n      \"unit_price\": 350000,\n      \"total\": 350000\n    }\n  ],\n  \"notes\": \"Applied 10% SME discount during direct consultation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{job_id}}/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "quote"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Approve & Send Quote to Client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved_by\": \"sme_owner_david\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{job_id}}/approve_quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "approve_quote"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Get Missing Fields (Recovery flow)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{job_id}}/missing_fields",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "missing_fields"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration",
+                  "description": "Filter jobs by persona/business"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Submit Manual SME Input (Recovery flow)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplied_fields\": {\n    \"guest_count\": 150,\n    \"event_date\": \"2026-11-20\"\n  },\n  \"source\": \"SME obtained details directly via phone call\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{job_id}}/manual_input",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "manual_input"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Retry Failed Job",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{job_id}}/retry",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{job_id}}",
+                "retry"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📚 Knowledge Base",
+      "description": "Endpoints for managing the Knowledge Base entries",
+      "item": [
+        {
+          "name": "List Knowledge Entries",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/knowledge?business_id=biz-event-decoration",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "knowledge"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Knowledge Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"biz-event-decoration\",\n  \"name\": \"New Menu\",\n  \"source_type\": \"Pricing\",\n  \"input_method\": \"manual\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/knowledge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "knowledge"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗓️ Availability",
+      "description": "Endpoints for managing Availability blocked dates",
+      "item": [
+        {
+          "name": "List Availability Dates",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/availability?business_id=biz-event-decoration",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "availability"
+              ],
+              "query": [
+                {
+                  "key": "business_id",
+                  "value": "biz-event-decoration"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Blocked Date",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"biz-event-decoration\",\n  \"date\": \"2026-12-25\",\n  \"status\": \"UNAVAILABLE\",\n  \"reason\": \"Christmas\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/availability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "availability"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

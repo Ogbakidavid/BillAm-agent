@@ -7,21 +7,19 @@ const events: AuditEvent[] = [];
 
 function logEvent(
   jobId: string,
-  eventType: AuditEvent["event_type"],
+  eventType: AuditEvent["type"],
   actor: string,
   details?: Record<string, any>,
-  fromState?: JobState,
-  toState?: JobState
+  _fromState?: JobState,
+  _toState?: JobState
 ): AuditEvent {
   const event: AuditEvent = {
-    event_id: randomUUID(),
+    id: randomUUID(),
     job_id: jobId,
-    event_type: eventType,
-    from_state: fromState,
-    to_state: toState,
-    actor,
-    details,
-    created_at: new Date(),
+    type: eventType,
+    label: String(eventType),
+    detail: details ? JSON.stringify(details) : undefined,
+    timestamp: new Date().toISOString(),
   };
 
   events.push(event);
@@ -37,7 +35,7 @@ export function logStateTransition(
   fromState: JobState,
   toState: JobState
 ): AuditEvent {
-  return logEvent(jobId, "STATE_TRANSITION", "system", undefined, fromState, toState);
+  return logEvent(jobId, "system", "system", undefined, fromState, toState);
 }
 
 
@@ -46,7 +44,7 @@ export function logClarificationSent(
   questions: string[],
   round: number
 ): AuditEvent {
-  return logEvent(jobId, "CLARIFICATION_SENT", "system", {
+  return logEvent(jobId, "system", "system", {
     questions,
     round,
     required_approval: false,
@@ -59,7 +57,7 @@ export function logClarificationSent(
  * mandatory human checkpoint per the PRD.
  */
 export function logQuoteApproved(jobId: string, quoteTotal: number): AuditEvent {
-  return logEvent(jobId, "QUOTE_APPROVED", "sme", {
+  return logEvent(jobId, "sme", "sme", {
     quote_total: quoteTotal,
     required_approval: true,
   });
@@ -67,7 +65,7 @@ export function logQuoteApproved(jobId: string, quoteTotal: number): AuditEvent 
 
 // Logs an SME editing a draft quote before approving it.
 export function logQuoteEdited(jobId: string, changes: Record<string, any>): AuditEvent {
-  return logEvent(jobId, "QUOTE_EDITED", "sme", { changes, required_approval: true });
+  return logEvent(jobId, "sme", "sme", { changes, required_approval: true });
 }
 
 // Returns the full audit trail for a job, oldest first.
