@@ -2,6 +2,7 @@ import { simulateSendMessageTool } from "../../src/agent/tools/simulateSendMessa
 
 jest.mock("../../src/state/JobStore", () => ({
   appendMessage: jest.fn(),
+  getJob: jest.fn(),
 }));
 
 jest.mock("../../src/state/auditLog", () => ({

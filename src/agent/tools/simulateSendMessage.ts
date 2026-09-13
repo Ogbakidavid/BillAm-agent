@@ -37,6 +37,27 @@ export const simulateSendMessageTool = tool({
   callback: async (
     input: SimulateSendMessageInput
   ): Promise<SimulateSendMessageOutput> => {
+    const existingJob = JobStore.getJob(input.job_id);
+    const lastAgentMessage = existingJob?.messages
+      .slice()
+      .reverse()
+      .find((message) => message.sender === "agent");
+
+    // A clarification is a side effect. If the model retries the same tool
+    // call, return success without appending the same client message twice.
+    if (
+      lastAgentMessage?.message_type === "CLARIFICATION" &&
+      lastAgentMessage.text === input.draft_message_to_client
+    ) {
+      return {
+        send_id: lastAgentMessage.message_id,
+        job_id: input.job_id,
+        status: "SUCCESS",
+        sent_at: lastAgentMessage.created_at,
+        error: null,
+      };
+    }
+
     const sendId = `send-${Date.now()}`;
     const sentAt = new Date().toISOString();
 

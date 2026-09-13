@@ -29,6 +29,7 @@ const mockTransitionJob = transitionJob as jest.Mock;
 
 const mockJob = {
   job_id: "job-001",
+  business_type: "event_vendor",
   state: "REASONING",
   messages: [],
   extracted_fields: {},
@@ -82,7 +83,11 @@ describe("updateJobStateTool", () => {
       {} as any,
     );
     expect(mockUpdateMissingFields).toHaveBeenCalledWith("job-001", [
+      "event_type",
       "guest_count",
+      "event_date",
+      "venue_location",
+      "budget_range",
     ]);
   });
 

@@ -13,6 +13,7 @@ import { z } from "zod";
 import * as JobStore from "../../state/JobStore";
 import * as AuditLog from "../../state/auditLog";
 import { transitionJob } from "../../state/stateMachine";
+import { getMissingRequiredFields } from "../../state/briefValidator";
 import { JobState } from "../../types/Job";
 import { randomInt, randomUUID } from "crypto";
 
@@ -130,6 +131,41 @@ export const updateJobStateTool = tool({
       throw new Error(`Job not found: ${input.job_id}`);
     }
 
+    const mergedFields = input.extracted_fields
+      ? { ...job.extracted_fields, ...input.extracted_fields }
+      : job.extracted_fields;
+    const authoritativeMissing = getMissingRequiredFields(
+      job.business_type,
+      mergedFields,
+    );
+    const effectiveClarificationRound =
+      input.clarification_round ?? job.clarification_round;
+
+    // The model may suggest missing fields, but it cannot declare a quote
+    // ready. Quote prerequisites are computed from the persisted brief.
+    if (
+      input.new_state === "AWAITING_HUMAN_APPROVAL" &&
+      authoritativeMissing.length > 0
+    ) {
+      throw new Error(
+        `Cannot prepare a quote while required fields are missing: ${authoritativeMissing.join(", ")}`,
+      );
+    }
+    if (input.quote && input.new_state !== "AWAITING_HUMAN_APPROVAL") {
+      throw new Error("A quote can only be saved in AWAITING_HUMAN_APPROVAL state");
+    }
+    if (input.new_state === "CLARIFYING" && authoritativeMissing.length === 0) {
+      throw new Error("Cannot enter CLARIFYING when all required fields are present");
+    }
+    if (
+      input.new_state === "NEEDS_SME_INPUT" &&
+      (authoritativeMissing.length === 0 || effectiveClarificationRound < 2)
+    ) {
+      throw new Error(
+        "NEEDS_SME_INPUT requires unresolved required fields after two clarification rounds",
+      );
+    }
+
     // Validate and apply state transition
     // Agents may persist fields while continuing to reason.  That is a data
     // update, not a state transition, so a REASONING → REASONING write must
@@ -155,9 +191,8 @@ export const updateJobStateTool = tool({
       JobStore.mergeExtractedFields(input.job_id, input.extracted_fields);
     }
 
-    if (input.missing_required_fields !== undefined) {
-      JobStore.updateMissingFields(input.job_id, input.missing_required_fields);
-    }
+    // Always persist the backend-computed result, never the model's guess.
+    JobStore.updateMissingFields(input.job_id, authoritativeMissing);
 
     if (input.clarification_round !== undefined) {
       const currentJob = JobStore.getJob(input.job_id);
