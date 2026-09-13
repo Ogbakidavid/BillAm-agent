@@ -75,7 +75,6 @@ pnpm dev
 Then import `postman/collections/BillAm_Agent_API.postman_collection.json` and the local environment from `postman/environments/`. The same scenarios are documented in [`docs/E2E_TESTING_GUIDE.md`](./docs/E2E_TESTING_GUIDE.md).
 
 ## Repository guide
-
 - `src/agent/` — orchestration, tools, prompts, and session handling
 - `src/api/` — Express routes, handlers, and validators
 - `src/state/` — job persistence, state transitions, availability, and audit data
