@@ -36,6 +36,31 @@ describe("briefValidator", () => {
     ).toEqual(["guest_count", "event_date"]);
   });
 
+  it("normalizes a guest range and an ordinal weekday date", () => {
+    expect(
+      getMissingRequiredFields("event_vendor", {
+        event_type: "baby_shower",
+        guest_count: "50–70 guests",
+        event_date_month: "October 2026",
+        event_date_day: "third Saturday",
+        venue_location: "Surulere",
+        budget_range: "budget tight",
+      }),
+    ).toEqual([]);
+  });
+
+  it("does not accept a month without a day as a complete event date", () => {
+    expect(
+      getMissingRequiredFields("event_vendor", {
+        event_type: "birthday",
+        guest_count: 40,
+        event_date: "October 2026",
+        venue_location: "Lekki",
+        budget_range: "500k",
+      }),
+    ).toContain("event_date");
+  });
+
   it("enforces the configured guest-count bounds", () => {
     expect(
       getMissingRequiredFields("event_vendor", {

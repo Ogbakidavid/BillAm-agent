@@ -119,7 +119,7 @@ client_message: "${lastMessage ? lastMessage.text : ""}"
           job_id: updatedJob.job_id,
           sender: "agent",
           message_type: "TEXT",
-          text: "Thanks for your patience! I've passed your enquiry to our team so they can follow up with you directly once we have a bit more detail.",
+          text: "Thanks for your patience! I've passed your enquiry to the SME for review. They’ll follow up with you directly once the remaining details are confirmed.",
           required_approval: false,
           created_at: new Date().toISOString(),
         });
@@ -177,7 +177,7 @@ client_message: "${lastMessage ? lastMessage.text : ""}"
       job_id: job.job_id,
       sender: "agent",
       message_type: "TEXT",
-      text: "I apologize, but I encountered a technical issue while processing your request. Please hold on while our team looks into this.",
+      text: "I apologize, but I encountered a technical issue while processing your request. Please hold on while the SME reviews it.",
       required_approval: false,
       created_at: new Date().toISOString(),
     });

@@ -13,7 +13,7 @@ import { z } from "zod";
 import * as JobStore from "../../state/JobStore";
 import * as AuditLog from "../../state/auditLog";
 import { transitionJob } from "../../state/stateMachine";
-import { getMissingRequiredFields } from "../../state/briefValidator";
+import { getMissingRequiredFields, normalizeExtractedFields } from "../../state/briefValidator";
 import { JobState } from "../../types/Job";
 import { randomInt, randomUUID } from "crypto";
 
@@ -131,9 +131,9 @@ export const updateJobStateTool = tool({
       throw new Error(`Job not found: ${input.job_id}`);
     }
 
-    const mergedFields = input.extracted_fields
+    const mergedFields = normalizeExtractedFields(input.extracted_fields
       ? { ...job.extracted_fields, ...input.extracted_fields }
-      : job.extracted_fields;
+      : job.extracted_fields);
     const authoritativeMissing = getMissingRequiredFields(
       job.business_type,
       mergedFields,
@@ -187,8 +187,8 @@ export const updateJobStateTool = tool({
     );
 
     // Apply all updates atomically
-    if (input.extracted_fields) {
-      JobStore.mergeExtractedFields(input.job_id, input.extracted_fields);
+    if (input.extracted_fields || Object.keys(mergedFields).length > 0) {
+      JobStore.mergeExtractedFields(input.job_id, mergedFields);
     }
 
     // Always persist the backend-computed result, never the model's guess.
