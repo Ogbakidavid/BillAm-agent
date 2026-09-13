@@ -3,8 +3,8 @@
  * Server Entrypoint and Graceful Shutdown Handler
  */
 
-import { app } from "./app";
 import { env } from "./config/env";
+import { app } from "./app";
 import { logger } from "./utils/logger";
 import { seedInitialJobs } from "./state/JobStore";
 

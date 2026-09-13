@@ -121,7 +121,7 @@ export async function postMessageHandler(
   }
   const { message_text, received_at, sender } = parsed.data;
   // Guard: only valid states can receive new client messages
-  const validInboundStates = ["IDLE", "CLARIFYING", "FAILED_RETRY"];
+  const validInboundStates = ["IDLE", "REASONING", "CLARIFYING", "FAILED_RETRY"];
   
   // Optional: If you want SME to inject messages at any time, you could bypass this state check if sender === "sme"
   if (!validInboundStates.includes(job.state) && sender !== "sme") {

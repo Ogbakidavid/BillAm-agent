@@ -24,4 +24,6 @@ export const env = {
   awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
   awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   strandsApiKey: process.env.STRANDS_API_KEY,
+  billamModelId: process.env.BILLAM_MODEL_ID ?? "claude-haiku-4-5",
+  billamMaxOutputTokens: Number(process.env.BILLAM_MAX_OUTPUT_TOKENS ?? 3072),
 };

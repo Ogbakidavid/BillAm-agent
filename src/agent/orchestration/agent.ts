@@ -4,6 +4,8 @@ import { AnthropicModel } from "@strands-agents/sdk/models/anthropic";
 import * as fs from "fs";
 import * as path from "path";
 
+import { env } from "../../config/env";
+
 // Tools
 import { fetchKnowledgeBaseTool } from "../tools/fetchKnowledgeBase";
 import { fetchPriceCatalogTool } from "../tools/fetchPriceCatalog";
@@ -26,19 +28,39 @@ const skillsPlugin = new AgentSkills({
 // Reuse the model provider across agent instances. The agent itself remains
 // per-job because sessions are isolated, but the provider can reuse its client
 // and Anthropic's cache can reuse the static prompt/tool prefix.
-const billamModel = new AnthropicModel({
-  modelId: process.env.BILLAM_MODEL_ID ?? "claude-haiku-4-5",
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  maxTokens: Number(process.env.BILLAM_MAX_OUTPUT_TOKENS ?? 3072),
-  cacheConfig: {
-    strategy: "anthropic",
-    ttl: "5m",
-    toolsTTL: "5m",
-    systemPromptTTL: "5m",
-    // Client messages and job state are dynamic; do not cache them.
-    messagesTTL: false,
-  },
-});
+//
+// Built lazily (not at module load) so this file no longer cares what order
+// it gets imported in relative to config/env.ts. The first call to
+// createBillamAgent() is what triggers construction, by which point env.ts
+// has already run dotenv.config().
+let billamModel: AnthropicModel | undefined;
+
+function getBillamModel(): AnthropicModel {
+  if (!billamModel) {
+    if (!env.anthropicApiKey) {
+      throw new Error(
+        "ANTHROPIC_API_KEY is missing. Check your .env file and confirm " +
+          "config/env.ts is loading before this module is used.",
+      );
+    }
+
+    billamModel = new AnthropicModel({
+      modelId: env.billamModelId,
+      apiKey: env.anthropicApiKey,
+      maxTokens: env.billamMaxOutputTokens,
+      cacheConfig: {
+        strategy: "anthropic",
+        ttl: "5m",
+        toolsTTL: "5m",
+        systemPromptTTL: "5m",
+        // Client messages and job state are dynamic; do not cache them.
+        messagesTTL: false,
+      },
+    });
+  }
+
+  return billamModel;
+}
 
 export function createBillamAgent(jobId: string): Agent {
   // Best Practice: Create one agent per request with a unique session ID
@@ -47,7 +69,7 @@ export function createBillamAgent(jobId: string): Agent {
   return new Agent({
     name: "BillAm-Agent",
     systemPrompt,
-    model: billamModel,
+    model: getBillamModel(),
     // Keep long-running sessions useful without repeatedly sending all old
     // tool results to the model on every turn.
     contextManager: "auto",
