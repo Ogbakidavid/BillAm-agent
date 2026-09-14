@@ -70,7 +70,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\",\n  \"client_name\": \"Sarah Adeyemi\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/jobs",
@@ -204,7 +204,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\",\n  \"client_name\": \"Emeka Okafor\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/jobs",
@@ -363,7 +363,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\",\n  \"client_name\": \"Funke Balogun\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/jobs",
@@ -523,7 +523,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\",\n  \"client_name\": \"Chidi Nwosu\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/jobs",
@@ -644,7 +644,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\",\n  \"client_name\": \"Adaeze Okonkwo\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/jobs",

@@ -42,7 +42,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\"\n}"
+              "raw": "{\n  \"business_id\": \"biz_vendor_001\",\n  \"business_type\": \"event_vendor\",\n  \"client_name\": \"Sarah Adeyemi\"\n}"
             },
             "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
           },
@@ -162,7 +162,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_002\",\n  \"business_type\": \"event_vendor\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_002\",\n  \"business_type\": \"event_vendor\",\n  \"client_name\": \"Emeka Okafor\"\n}" },
             "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
           },
           "response": []
@@ -309,7 +309,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_003\",\n  \"business_type\": \"event_vendor\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_003\",\n  \"business_type\": \"event_vendor\",\n  \"client_name\": \"Funke Balogun\"\n}" },
             "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
           },
           "response": []
@@ -454,7 +454,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_004\",\n  \"business_type\": \"event_vendor\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_004\",\n  \"business_type\": \"event_vendor\",\n  \"client_name\": \"Chidi Nwosu\"\n}" },
             "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
           },
           "response": []
@@ -570,7 +570,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_005\",\n  \"business_type\": \"event_vendor\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"business_id\": \"biz_vendor_005\",\n  \"business_type\": \"event_vendor\",\n  \"client_name\": \"Adaeze Okonkwo\"\n}" },
             "url": { "raw": "{{baseUrl}}/jobs", "host": ["{{baseUrl}}"], "path": ["jobs"] }
           },
           "response": []
