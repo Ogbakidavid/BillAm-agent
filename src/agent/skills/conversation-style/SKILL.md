@@ -87,6 +87,7 @@ If several questions genuinely belong together, they may be asked in the same co
 ---
 ## One Conversational Message, Not a Questionnaire
 The client-facing output should normally be **ONE coherent chat message**.
+It should normally be one short paragraph. Never use numbered items, bullets, labels, or a list-like layout, even when asking two related questions.
 ### Good Example
 **Agent:** "That sounds great. Roughly how many guests are you expecting, and do you already have a venue in mind?"
 ### NOT This

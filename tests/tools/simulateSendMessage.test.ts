@@ -53,4 +53,42 @@ describe("simulateSendMessageTool", () => {
     });
     expect(schemaCheck?.success).toBe(false);
   });
+
+  it("should reject numbered clarification questions before they reach the client", async () => {
+    const result = await simulateSendMessageTool.invoke({
+      job_id: "job-202",
+      message_type: "clarifying_questions",
+      draft_message_to_client: "1. How many guests are you expecting? 2. Where is the venue?",
+      sender: "business",
+      required_approval: false,
+    });
+
+    expect(result.status).toBe("FAILED_RETRY");
+    expect(result.error).toMatch(/numbered|bulleted/i);
+  });
+
+  it("should reject schema language in clarification messages", async () => {
+    const result = await simulateSendMessageTool.invoke({
+      job_id: "job-202",
+      message_type: "clarifying_questions",
+      draft_message_to_client: "Please provide the following required information: guest_count and event_date.",
+      sender: "business",
+      required_approval: false,
+    });
+
+    expect(result.status).toBe("FAILED_RETRY");
+    expect(result.error).toMatch(/schema|field|information/i);
+  });
+
+  it("should accept a natural conversational clarification", async () => {
+    const result = await simulateSendMessageTool.invoke({
+      job_id: "job-202",
+      message_type: "clarifying_questions",
+      draft_message_to_client: "That sounds lovely. Roughly how many guests are you expecting, and do you already have a venue in mind?",
+      sender: "business",
+      required_approval: false,
+    });
+
+    expect(result.status).toBe("SUCCESS");
+  });
 });

@@ -17,6 +17,7 @@ import {
   SimulateSendMessageInput,
   SimulateSendMessageOutput,
 } from "../../types/ToolContracts";
+import { validateClarificationMessage } from "../../state/clarificationMessageValidator";
 
 const simulateSendMessageInputSchema = z
   .object({
@@ -37,6 +38,19 @@ export const simulateSendMessageTool = tool({
   callback: async (
     input: SimulateSendMessageInput
   ): Promise<SimulateSendMessageOutput> => {
+    if (input.message_type === "clarifying_questions") {
+      const validationError = validateClarificationMessage(input.draft_message_to_client);
+      if (validationError) {
+        return {
+          send_id: "",
+          job_id: input.job_id,
+          status: "FAILED_RETRY",
+          sent_at: new Date().toISOString(),
+          error: validationError,
+        };
+      }
+    }
+
     const existingJob = JobStore.getJob(input.job_id);
     const lastAgentMessage = existingJob?.messages
       .slice()
