@@ -91,6 +91,42 @@ describe("updateJobStateTool", () => {
     ]);
   });
 
+  it("does not replace an existing event type from an unrelated follow-up message", async () => {
+    mockGetJob.mockReturnValue({
+      ...mockJob,
+      extracted_fields: { event_type: "baby_shower" },
+      messages: [{ sender: "client", text: "We have decided on the 25th of November." }],
+    });
+
+    await updateJobStateTool.invoke({
+      job_id: "job-001",
+      new_state: "REASONING",
+      extracted_fields: { event_type: "birthday" },
+    }, {} as any);
+
+    expect(mockMergeExtractedFields).toHaveBeenCalledWith("job-001", {
+      event_type: "baby_shower",
+    });
+  });
+
+  it("allows an event type change when the client explicitly states it", async () => {
+    mockGetJob.mockReturnValue({
+      ...mockJob,
+      extracted_fields: { event_type: "baby_shower" },
+      messages: [{ sender: "client", text: "Actually, it is a birthday party." }],
+    });
+
+    await updateJobStateTool.invoke({
+      job_id: "job-001",
+      new_state: "REASONING",
+      extracted_fields: { event_type: "birthday" },
+    }, {} as any);
+
+    expect(mockMergeExtractedFields).toHaveBeenCalledWith("job-001", {
+      event_type: "birthday",
+    });
+  });
+
   it("throws when job is not found", async () => {
     mockGetJob.mockReturnValue(undefined);
     await expect(

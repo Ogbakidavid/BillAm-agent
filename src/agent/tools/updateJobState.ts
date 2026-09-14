@@ -34,6 +34,58 @@ function buildFailedRetryMessage(businessType: string): string {
   return "Thanks for the details. I’m reviewing the best way to scope this request with the business owner so we can come back with practical options.";
 }
 
+function normalizeEventTypeText(value: unknown): string {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function eventTypeIsSupportedByMessage(eventType: unknown, message: string): boolean {
+  const candidate = normalizeEventTypeText(eventType);
+  const clientMessage = normalizeEventTypeText(message);
+  if (!candidate || !clientMessage) return false;
+  if (clientMessage.includes(candidate)) return true;
+
+  // Allow natural variants such as "baby shower party" for a stored
+  // `baby_shower`, while ignoring generic words like "event" and "party".
+  const genericWords = new Set(["event", "party", "ceremony", "celebration", "service"]);
+  const significantWords = candidate
+    .split(" ")
+    .filter((word) => word.length > 2 && !genericWords.has(word));
+  return significantWords.length > 0 && significantWords.every((word) => clientMessage.includes(word));
+}
+
+function protectExistingEventType(
+  job: { extracted_fields: Record<string, unknown>; messages: Array<{ sender: string; text: string }> },
+  extractedFields: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
+  if (!extractedFields || typeof extractedFields.event_type !== "string") {
+    return extractedFields;
+  }
+
+  const existingEventType = job.extracted_fields.event_type;
+  const proposedEventType = extractedFields.event_type;
+  if (
+    typeof existingEventType !== "string" ||
+    normalizeEventTypeText(existingEventType) === normalizeEventTypeText(proposedEventType)
+  ) {
+    return extractedFields;
+  }
+
+  const latestClientMessage = [...job.messages]
+    .reverse()
+    .find((message) => message.sender === "client")?.text ?? "";
+
+  if (eventTypeIsSupportedByMessage(proposedEventType, latestClientMessage)) {
+    return extractedFields;
+  }
+
+  return { ...extractedFields, event_type: existingEventType };
+}
+
 const lineItemSchema = z.object({
   name: z.string(),
   quantity: z.number(),
@@ -92,8 +144,9 @@ export const updateJobStateTool = tool({
       throw new Error(`Job not found: ${input.job_id}`);
     }
 
-    const mergedFields = normalizeExtractedFields(input.extracted_fields
-      ? { ...job.extracted_fields, ...input.extracted_fields }
+    const protectedExtractedFields = protectExistingEventType(job, input.extracted_fields);
+    const mergedFields = normalizeExtractedFields(protectedExtractedFields
+      ? { ...job.extracted_fields, ...protectedExtractedFields }
       : job.extracted_fields);
     const authoritativeMissing = getMissingRequiredFields(
       job.business_type,

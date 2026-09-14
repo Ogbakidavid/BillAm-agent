@@ -11,6 +11,7 @@
       "options": [
         "wedding",
         "engagement",
+        "baby_shower",
         "birthday",
         "corporate",
         "burial/funeral",
@@ -19,7 +20,7 @@
         "other"
       ],
       "extraction_hints": [
-        "Client may say 'wedding', 'owambe', 'intro/traditional wedding', 'white wedding', 'birthday party', 'send-forth', 'corporate event', 'burial', 'naming ceremony'",
+        "Client may say 'wedding', 'owambe', 'intro/traditional wedding', 'white wedding', 'baby shower', 'birthday party', 'send-forth', 'corporate event', 'burial', 'naming ceremony'",
         "'Owambe' is a general Nigerian term for a lavish party — if used with no further detail, treat event_type as ambiguous and ask"
       ],
       "clarifying_question_templates": [

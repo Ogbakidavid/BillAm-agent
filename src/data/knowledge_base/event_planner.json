@@ -9,6 +9,7 @@
       "type": "enum",
       "options": [
         "wedding",
+        "baby_shower",
         "corporate",
         "birthday",
         "product_launch",
