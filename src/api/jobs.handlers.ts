@@ -30,26 +30,17 @@ import type { ChatMessage, LineItem } from "../types/Job";
 
 import { runAgentLoop } from "../agent/orchestration/agentLoop";
 
-const GENERATED_CLIENT_NAMES = [
+const LEGACY_CLIENT_NAMES = [
   "Amara Nwosu", "Chisom Okafor", "Tunde Balogun", "Zainab Ibrahim",
   "Femi Adewale", "Ijeoma Eze", "Sola Ajayi", "Nneka Umeh",
 ];
 
-function generatedClientName(): string {
-  return GENERATED_CLIENT_NAMES[randomInt(GENERATED_CLIENT_NAMES.length)];
+function legacyClientName(): string {
+  return LEGACY_CLIENT_NAMES[randomInt(LEGACY_CLIENT_NAMES.length)];
 }
 
-function generatedClientPhone(): string {
+function legacyClientPhone(): string {
   return `+234 80${randomInt(10_000_000, 100_000_000)}`;
-}
-
-function ensureClientIdentity(job: { job_id: string; extracted_fields: Record<string, unknown> }): void {
-  if (!job.extracted_fields.client_name) {
-    mergeExtractedFields(job.job_id, { client_name: generatedClientName() });
-  }
-  if (!job.extracted_fields.client_phone) {
-    mergeExtractedFields(job.job_id, { client_phone: generatedClientPhone() });
-  }
 }
 
 function buildQuoteCoverMessage(total: number): string {
@@ -73,7 +64,7 @@ export async function createJobHandler(
     return;
   }
 
-  const { business_id, business_type } = parsed.data;
+  const { business_id, business_type, client_name } = parsed.data;
 
   const systemMessage: ChatMessage = {
     message_id: randomUUID(),
@@ -87,10 +78,12 @@ export async function createJobHandler(
 
   const job = createJob(business_id, business_type, systemMessage);
   job.messages[0].job_id = job.job_id;
-  // The client identity is distinct from the enquiry's event type. Persist a
-  // generated display name at creation so list and detail routes refer to the
-  // same client instead of rendering e.g. “wedding” as the client name.
-  ensureClientIdentity(job);
+  // The simulator always supplies client_name from its selected persona. Keep
+  // a legacy fallback for older API clients and seeded test fixtures.
+  mergeExtractedFields(job.job_id, {
+    client_name: client_name ?? legacyClientName(),
+    client_phone: legacyClientPhone(),
+  });
 
   res.status(201).json({ success: true, data: job });
 }
@@ -176,7 +169,6 @@ export async function getJobHandler(
     });
     return;
   }
-  ensureClientIdentity(job);
   res.status(200).json({ success: true, data: job });
 }
 
@@ -189,7 +181,6 @@ export async function listJobsHandler(
 ): Promise<void> {
   const businessId = req.query.business_id as string | undefined;
   const jobs = getAllJobs(businessId);
-  jobs.forEach(ensureClientIdentity);
   res.status(200).json({ success: true, data: { jobs } });
 }
 

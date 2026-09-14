@@ -33,6 +33,7 @@ export type ApiErrorCode =
 export interface CreateJobRequest {
   business_id: string;
   business_type: "event_vendor" | "caterer" | "tailor" | "photographer" | "event_planner" | "equipment_rental";
+  client_name?: string;
 }
 
 export interface CreateJobResponse {
@@ -229,4 +230,3 @@ export interface CheckAvailabilityResponse {
   available: boolean;
   blocked_entry: AvailabilityDate | null;
 }
-

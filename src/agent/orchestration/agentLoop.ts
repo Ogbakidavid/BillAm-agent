@@ -38,7 +38,10 @@ job_id: ${job.job_id}
 business_type: ${job.business_type}
 clarification_round: ${job.clarification_round}
 
-existing_fields: ${JSON.stringify(job.extracted_fields, null, 2)}
+    existing_fields: ${JSON.stringify(job.extracted_fields, null, 2)}
+
+first_client_turn: ${job.messages.filter((message) => message.sender === "client").length === 1}
+If this is the first client turn, begin the client-facing response with a brief, natural greeting. Use the persisted client name when it helps the conversation. Keep the greeting in the same single response as the acknowledgement or question; do not add a separate greeting message.
 
 client_message: "${lastMessage ? lastMessage.text : ""}"
     `.trim();

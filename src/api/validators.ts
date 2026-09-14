@@ -8,6 +8,7 @@ import { z } from "zod";
 export const createJobSchema = z.object({
   business_id: z.string().min(1, "business_id is required"),
   business_type: z.enum(["event_vendor", "caterer", "tailor", "photographer", "event_planner", "equipment_rental"]),
+  client_name: z.string().trim().min(1, "client_name cannot be empty").optional(),
 });
 
 export const postMessageSchema = z.object({
